@@ -177,7 +177,7 @@
 </head>
 <body>
 
-<header>
+<header id="app-header" hidden>
   <div class="brand">
     <span class="mark">67 <em>TEEN</em></span>
     <span class="tagline">ton assistant révisions</span>
@@ -190,7 +190,7 @@
   </nav>
 </header>
 
-<main>
+<main id="app-main" hidden>
 
   <section id="view-new">
     <h2>Un cours à réviser ?</h2>
@@ -246,6 +246,17 @@
   <section id="view-parent" hidden></section>
 
 </main>
+
+<div id="app-gate" class="profile-gate" hidden>
+  <div class="pin-box">
+    <div class="icon">🔑</div>
+    <h2 id="app-gate-title">Accès à 67 TEEN</h2>
+    <p class="hint" id="app-gate-hint">Entre le code que tes parents t'ont donné.</p>
+    <input type="text" id="app-code-input" autocapitalize="off" autocorrect="off" style="text-align:center;">
+    <button class="btn" id="app-gate-btn" style="margin-top:16px;">Valider</button>
+    <div class="notice error" id="app-gate-error" hidden></div>
+  </div>
+</div>
 
 <div id="profile-gate" class="profile-gate" hidden>
   <div class="pin-box">
@@ -373,8 +384,63 @@
     updateProfilePill();
   };
 
-  updateProfilePill();
-  if (!getProfile()) openProfileGate(false);
+  function enterApp(){
+    $('app-header').hidden = false;
+    $('app-main').hidden = false;
+    updateProfilePill();
+    if (!getProfile()) openProfileGate(false);
+  }
+
+  // ---------------- code d'accès familial ----------------
+  async function checkAppAccess(){
+    if (localStorage.getItem('teen_app_unlocked') === '1') { enterApp(); return; }
+    let status;
+    try { status = await callFn('teen-parent', { action: 'app_status' }); }
+    catch(e) {
+      $('app-gate').hidden = false;
+      $('app-gate-error').hidden = false;
+      $('app-gate-error').textContent = "Impossible de contacter le serveur — réessaie.";
+      return;
+    }
+    $('app-gate').hidden = false;
+    if (!status.configured) {
+      $('app-gate-title').textContent = 'Créer le code familial';
+      $('app-gate-hint').textContent = "Personne n'a encore de code — choisis-en un à partager avec ta famille.";
+      $('app-gate-btn').onclick = async () => {
+        const code = $('app-code-input').value;
+        try {
+          await callFn('teen-parent', { action: 'app_set', code });
+          localStorage.setItem('teen_app_unlocked', '1');
+          $('app-gate').hidden = true;
+          enterApp();
+        } catch(e) {
+          $('app-gate-error').hidden = false;
+          $('app-gate-error').textContent = e.code === 'invalid_code' ? 'Le code doit faire au moins 4 caractères.' : "Erreur — réessaie.";
+        }
+      };
+    } else {
+      $('app-gate-title').textContent = 'Accès à 67 TEEN';
+      $('app-gate-hint').textContent = "Entre le code que tes parents t'ont donné.";
+      $('app-gate-btn').onclick = async () => {
+        const code = $('app-code-input').value;
+        try {
+          const res = await callFn('teen-parent', { action: 'app_verify', code });
+          if (res.ok) {
+            localStorage.setItem('teen_app_unlocked', '1');
+            $('app-gate').hidden = true;
+            enterApp();
+          } else {
+            $('app-gate-error').hidden = false;
+            $('app-gate-error').textContent = 'Code incorrect.';
+          }
+        } catch(e) {
+          $('app-gate-error').hidden = false;
+          $('app-gate-error').textContent = "Erreur — réessaie.";
+        }
+      };
+    }
+  }
+  checkAppAccess();
 
   // ---------------- navigation ----------------
   function switchView(name){
@@ -792,7 +858,9 @@
 
   async function renderParentDashboard(v){
     v.innerHTML =
-      '<div class="parent-header"><h2>Bulletins de notes</h2><button class="link-btn" id="btn-change-pin">Changer le code</button></div>' +
+      '<div class="parent-header"><h2>Bulletins de notes</h2>' +
+        '<span><button class="link-btn" id="btn-change-pin">Code parent</button> · <button class="link-btn" id="btn-change-appcode">Code familial</button></span>' +
+      '</div>' +
       '<p class="hint">Photographie le bulletin si l\'école ne propose pas de connexion automatique.</p>' +
       '<div class="dropzone" id="bulletin-dropzone"><span class="icon">🧾</span><span class="label">Photographier un bulletin</span> <span class="sub">toutes les notes seront relues avant d\'être enregistrées</span>' +
       '<input type="file" accept="image/*" capture="environment" id="bulletin-input"></div>' +
@@ -802,8 +870,39 @@
       '<div id="bulletins-list"></div>';
 
     $('btn-change-pin').onclick = renderChangePin;
+    $('btn-change-appcode').onclick = renderChangeAppCode;
     $('bulletin-input').addEventListener('change', handleBulletinPhoto);
     loadBulletins();
+  }
+
+  function renderChangeAppCode(){
+    const v = $('view-parent');
+    v.innerHTML =
+      '<div class="pin-box"><div class="icon">🔑</div><h2>Changer le code familial</h2>' +
+      '<label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;">Code actuel</label>' +
+      '<input type="text" id="appcode-old">' +
+      '<label style="display:block;font-size:.85rem;font-weight:700;margin:14px 0 6px;">Nouveau code</label>' +
+      '<input type="text" id="appcode-new">' +
+      '<button class="btn" id="appcode-change-btn">Enregistrer</button>' +
+      '<button class="pin-box switch" id="appcode-cancel">Annuler</button>' +
+      '<div class="notice error" id="appcode-change-error" hidden></div></div>';
+    $('appcode-cancel').onclick = () => renderParent();
+    $('appcode-change-btn').onclick = async () => {
+      const oldCode = $('appcode-old').value.trim();
+      const code = $('appcode-new').value.trim();
+      if (code.length < 4) {
+        $('appcode-change-error').hidden = false;
+        $('appcode-change-error').textContent = 'Le nouveau code doit faire au moins 4 caractères.';
+        return;
+      }
+      try {
+        await callFn('teen-parent', { action: 'app_set', code, oldCode });
+        renderParent();
+      } catch(e) {
+        $('appcode-change-error').hidden = false;
+        $('appcode-change-error').textContent = e.code === 'wrong_old_code' ? "Le code actuel n'est pas correct." : "Erreur — réessaie.";
+      }
+    };
   }
 
   function renderChangePin(){
