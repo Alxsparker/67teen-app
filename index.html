@@ -59,6 +59,8 @@
   .brand .mark{font-family:var(--font-display); font-weight:700; font-size:1.5rem; letter-spacing:-.01em;}
   .brand .mark em{font-style:normal; color:var(--accent);}
   .brand .tagline{color:var(--muted); font-size:.85rem;}
+  .profile-pill{margin-left:auto; background:var(--paper-sunken); border:1px solid var(--line); border-radius:99px; padding:5px 12px; font-size:.78rem; font-weight:600; color:var(--ink); cursor:pointer;}
+  .profile-gate{position:fixed; inset:0; background:var(--paper); z-index:50; display:flex; align-items:center; justify-content:center; padding:20px; overflow-y:auto;}
   nav{max-width:640px; margin:14px auto 0; display:flex; gap:4px;}
   nav button{flex:1; background:none; border:none; padding:10px 4px 12px; font-size:.86rem; font-weight:600; color:var(--muted); border-bottom:2px solid transparent; cursor:pointer;}
   nav button.active{color:var(--ink); border-bottom-color:var(--accent);}
@@ -179,6 +181,7 @@
   <div class="brand">
     <span class="mark">67 <em>TEEN</em></span>
     <span class="tagline">ton assistant révisions</span>
+    <button id="profile-pill" class="profile-pill" hidden></button>
   </div>
   <nav>
     <button id="tab-new" class="active">Nouvelle séance</button>
@@ -244,6 +247,29 @@
 
 </main>
 
+<div id="profile-gate" class="profile-gate" hidden>
+  <div class="pin-box">
+    <div class="icon">👋</div>
+    <h2 id="profile-gate-title">Avant de commencer</h2>
+    <p class="hint">Ça aide 67 TEEN à adapter ses explications à ton niveau.</p>
+    <label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;text-align:left;">Prénom (facultatif)</label>
+    <input type="text" id="profile-prenom" style="margin-bottom:14px;">
+    <label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;text-align:left;">Âge</label>
+    <input type="number" id="profile-age" min="6" max="20" style="margin-bottom:14px;">
+    <label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;text-align:left;">Classe</label>
+    <select id="profile-classe" style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--line);background:var(--paper-raised);color:var(--ink);font-size:.95rem;">
+      <option value="">Choisis ta classe</option>
+      <option>CP</option><option>CE1</option><option>CE2</option><option>CM1</option><option>CM2</option>
+      <option>6e</option><option>5e</option><option>4e</option><option>3e</option>
+      <option>2nde</option><option>1ère</option><option>Terminale</option>
+      <option>Autre</option>
+    </select>
+    <button class="btn" id="profile-save-btn" style="margin-top:16px;">Valider</button>
+    <button class="pin-box switch" id="profile-cancel" hidden>Annuler</button>
+    <div class="notice error" id="profile-error" hidden></div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
@@ -299,6 +325,56 @@
   }
 
   const $ = (id) => document.getElementById(id);
+
+  // ---------------- profil élève ----------------
+  function getProfile(){
+    try { return JSON.parse(localStorage.getItem('teen_profile') || 'null'); }
+    catch(e) { return null; }
+  }
+
+  function updateProfilePill(){
+    const p = getProfile();
+    const pill = $('profile-pill');
+    if (p) {
+      pill.hidden = false;
+      pill.textContent = '👤 ' + (p.prenom ? p.prenom + ' · ' : '') + (p.classe || 'profil');
+    } else {
+      pill.hidden = true;
+    }
+  }
+
+  function openProfileGate(editing){
+    const p = getProfile();
+    $('profile-prenom').value = (editing && p) ? (p.prenom || '') : '';
+    $('profile-age').value = (editing && p) ? (p.age || '') : '';
+    $('profile-classe').value = (editing && p) ? (p.classe || '') : '';
+    $('profile-gate-title').textContent = editing ? 'Ton profil' : 'Avant de commencer';
+    $('profile-cancel').hidden = !editing;
+    $('profile-error').hidden = true;
+    $('profile-gate').hidden = false;
+  }
+
+  $('profile-pill').onclick = () => openProfileGate(true);
+  $('profile-cancel').onclick = () => { $('profile-gate').hidden = true; };
+  $('profile-save-btn').onclick = () => {
+    const classe = $('profile-classe').value;
+    const age = $('profile-age').value.trim();
+    if (!classe) {
+      $('profile-error').hidden = false;
+      $('profile-error').textContent = 'Choisis ta classe pour continuer.';
+      return;
+    }
+    localStorage.setItem('teen_profile', JSON.stringify({
+      prenom: $('profile-prenom').value.trim(),
+      age: age ? Number(age) : null,
+      classe
+    }));
+    $('profile-gate').hidden = true;
+    updateProfilePill();
+  };
+
+  updateProfilePill();
+  if (!getProfile()) openProfileGate(false);
 
   // ---------------- navigation ----------------
   function switchView(name){
@@ -374,6 +450,10 @@
 
     try {
       const payload = { action: 'analyser', matiere };
+      const profile = getProfile();
+      if (profile && profile.classe) {
+        payload.niveau = profile.classe + (profile.age ? ' (' + profile.age + ' ans)' : '');
+      }
       if (photoFile) {
         payload.imageBase64 = await fileToBase64(photoFile);
         payload.imageMediaType = photoFile.type || 'image/jpeg';
@@ -553,7 +633,9 @@
     btn.disabled = true;
     btn.textContent = 'Enregistrement...';
     try {
+      const profile = getProfile();
       const { error } = await sb.from('teen_seances').insert({
+        eleve: profile ? (profile.prenom || profile.classe || null) : null,
         matiere: draft.matiere,
         commentaire: draft.commentaire || '',
         resume: draft.resume,
@@ -819,7 +901,9 @@
     const moyenneRaw = $('bulletin-moyenne').value.trim();
     const moyenne = moyenneRaw ? parseFloat(moyenneRaw.replace(',', '.')) : null;
     try {
+      const profile = getProfile();
       const { error } = await sb.from('teen_bulletins').insert({
+        eleve: profile ? (profile.prenom || profile.classe || null) : null,
         periode,
         matieres: bulletinDraft.matieres,
         moyenne_generale: isNaN(moyenne) ? null : moyenne,
