@@ -114,6 +114,12 @@
   .quiz-item{margin-bottom:20px;}
   .quiz-item .q{font-weight:700; margin-bottom:8px; font-size:.97rem;}
   .quiz-item .qnum{color:var(--accent); margin-right:6px;}
+  .answer-wrap{position:relative;}
+  .answer-wrap textarea{padding-right:54px;}
+  .mic-btn{position:absolute; right:8px; bottom:8px; width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:var(--paper-raised); color:var(--muted); cursor:pointer; font-size:1.05rem; display:flex; align-items:center; justify-content:center; padding:0;}
+  .mic-btn.listening{background:var(--bad); border-color:var(--bad); color:#fff; animation:mic-pulse 1.1s ease-in-out infinite;}
+  @keyframes mic-pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(193,67,47,.35); } 50%{ box-shadow:0 0 0 8px rgba(193,67,47,0); } }
+  .mic-hint{font-size:.76rem; color:var(--muted); margin-top:6px;}
   .correction{margin-top:10px; padding:12px 14px; border-radius:10px; display:flex; gap:10px; align-items:flex-start;}
   .correction.correct{background:var(--good-soft);}
   .correction.partiel{background:var(--warn-soft);}
@@ -413,18 +419,74 @@
       '<button class="btn ghost" id="btn-nouvelle-seance">← Nouvelle séance</button>';
 
     const list = $('quiz-list');
+    const micOn = speechSupported();
     draft.questions.forEach((q, i) => {
       const item = document.createElement('div');
       item.className = 'quiz-item';
       item.innerHTML =
         '<div class="q"><span class="qnum">' + (i+1) + '.</span>' + escapeHtml(q) + '</div>' +
-        '<textarea data-qi="' + i + '" placeholder="Ta réponse..." rows="2"></textarea>' +
+        '<div class="answer-wrap">' +
+          '<textarea data-qi="' + i + '" placeholder="Ta réponse..." rows="2"></textarea>' +
+          (micOn ? '<button type="button" class="mic-btn" data-qi="' + i + '" title="Répondre à l\'oral">🎤</button>' : '') +
+        '</div>' +
+        (micOn ? '<div class="mic-hint" data-mic-hint="' + i + '" hidden></div>' : '') +
         '<div class="correction-slot"></div>';
       list.appendChild(item);
     });
 
+    if (micOn) {
+      list.querySelectorAll('.mic-btn').forEach(setupMic);
+    }
+
     $('btn-corriger').onclick = corriger;
     $('btn-nouvelle-seance').onclick = () => { resetForm(); switchView('new'); };
+  }
+
+  function speechSupported(){
+    return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  }
+
+  function setupMic(btn){
+    const qi = btn.dataset.qi;
+    const textarea = document.querySelector('#quiz-list textarea[data-qi="' + qi + '"]');
+    const hint = document.querySelector('[data-mic-hint="' + qi + '"]');
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let listening = false;
+
+    btn.addEventListener('click', () => {
+      if (listening) { recognition && recognition.stop(); return; }
+
+      recognition = new SR();
+      recognition.lang = 'fr-FR';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        listening = true;
+        btn.classList.add('listening');
+        btn.textContent = '⏺';
+        if (hint) { hint.hidden = false; hint.textContent = 'Je t\'écoute...'; }
+      };
+      recognition.onresult = (e) => {
+        const transcript = e.results[0][0].transcript;
+        textarea.value = (textarea.value.trim() ? textarea.value.trim() + ' ' : '') + transcript;
+        textarea.dispatchEvent(new Event('input'));
+        if (hint) hint.hidden = true;
+      };
+      recognition.onerror = (e) => {
+        if (hint) {
+          hint.hidden = false;
+          hint.textContent = e.error === 'not-allowed' ? "Micro refusé — autorise-le dans les réglages du navigateur." : "Je n'ai rien entendu, réessaie.";
+        }
+      };
+      recognition.onend = () => {
+        listening = false;
+        btn.classList.remove('listening');
+        btn.textContent = '🎤';
+      };
+      recognition.start();
+    });
   }
 
   async function corriger(){
