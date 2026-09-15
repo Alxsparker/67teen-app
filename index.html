@@ -1,0 +1,805 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>67 TEEN</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#E15A2E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="67 TEEN">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=Caveat:wght@500;600;700&display=swap');
+
+  :root{
+    --paper:#F4F5F0;
+    --paper-raised:#FFFFFF;
+    --paper-sunken:#ECEEE6;
+    --line:#DCE1D9;
+    --ink:#20281F;
+    --muted:#5C665A;
+    --accent:#E15A2E;
+    --accent-strong:#C6491F;
+    --accent-soft:#FBE2D4;
+    --good:#2F8F6F;
+    --good-soft:#DCEEE6;
+    --warn:#B9791C;
+    --warn-soft:#F5E7CE;
+    --bad:#C1432F;
+    --bad-soft:#F7DED9;
+    --font-display:'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-body:'Karla', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-hand:'Caveat', cursive;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#1B211A; --paper-raised:#232B21; --paper-sunken:#171C15;
+      --line:#38412F; --ink:#ECEFE7; --muted:#A4AE9C;
+      --accent:#FF7A4D; --accent-strong:#FF9569; --accent-soft:#3A2A1E;
+      --good:#5FC79C; --good-soft:#1E332B; --warn:#E3B15C; --warn-soft:#3A2F19;
+      --bad:#E67560; --bad-soft:#3A211C;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#1B211A; --paper-raised:#232B21; --paper-sunken:#171C15;
+    --line:#38412F; --ink:#ECEFE7; --muted:#A4AE9C;
+    --accent:#FF7A4D; --accent-strong:#FF9569; --accent-soft:#3A2A1E;
+    --good:#5FC79C; --good-soft:#1E332B; --warn:#E3B15C; --warn-soft:#3A2F19;
+    --bad:#E67560; --bad-soft:#3A211C;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; background:var(--paper); color:var(--ink);}
+  body{font-family:var(--font-body); line-height:1.55; padding-bottom:64px;}
+  button{font-family:inherit;}
+  textarea,input{font-family:inherit;}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+  header{position:sticky; top:0; z-index:10; background:var(--paper); border-bottom:1px solid var(--line); padding:16px 20px 0;}
+  .brand{display:flex; align-items:baseline; gap:10px; max-width:640px; margin:0 auto;}
+  .brand .mark{font-family:var(--font-display); font-weight:700; font-size:1.5rem; letter-spacing:-.01em;}
+  .brand .mark em{font-style:normal; color:var(--accent);}
+  .brand .tagline{color:var(--muted); font-size:.85rem;}
+  nav{max-width:640px; margin:14px auto 0; display:flex; gap:4px;}
+  nav button{flex:1; background:none; border:none; padding:10px 4px 12px; font-size:.86rem; font-weight:600; color:var(--muted); border-bottom:2px solid transparent; cursor:pointer;}
+  nav button.active{color:var(--ink); border-bottom-color:var(--accent);}
+
+  main{max-width:640px; margin:0 auto; padding:28px 20px 40px;}
+  [hidden]{display:none !important;}
+
+  h2{font-family:var(--font-display); font-weight:600; font-size:1.4rem; margin:0 0 4px;}
+  .hint{color:var(--muted); font-size:.92rem; margin:0 0 22px;}
+  .field{margin-bottom:22px;}
+  .field > label{display:block; font-weight:700; font-size:.85rem; margin-bottom:9px;}
+
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{padding:8px 14px; border-radius:99px; border:1px solid var(--line); background:var(--paper-raised); color:var(--ink); font-size:.88rem; font-weight:600; cursor:pointer;}
+  .chip.selected{background:var(--accent); border-color:var(--accent); color:#fff;}
+  input.matiere-autre{margin-top:10px; width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--line); background:var(--paper-raised); color:var(--ink); font-size:.95rem;}
+
+  .dropzone{border:1.5px dashed var(--line); border-radius:14px; padding:22px; text-align:center; cursor:pointer; background:var(--paper-raised); position:relative;}
+  .dropzone .icon{font-size:1.8rem; display:block; margin-bottom:6px;}
+  .dropzone .label{font-weight:600; font-size:.92rem;}
+  .dropzone .sub{color:var(--muted); font-size:.82rem; margin-top:3px;}
+  .dropzone input[type=file]{position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;}
+  .photo-preview{display:none; margin-top:12px; border-radius:12px; overflow:hidden; border:1px solid var(--line); transform:rotate(-0.6deg); box-shadow:0 3px 10px rgba(0,0,0,.08);}
+  .photo-preview.show{display:block;}
+  .photo-preview img{display:block; width:100%; max-height:280px; object-fit:cover;}
+  .photo-preview .remove{display:block; width:100%; background:var(--paper-sunken); border:none; border-top:1px solid var(--line); padding:8px; font-size:.82rem; font-weight:600; color:var(--muted); cursor:pointer;}
+
+  textarea{width:100%; padding:13px 14px; border-radius:10px; border:1px solid var(--line); background:var(--paper-raised); color:var(--ink); font-size:.95rem; resize:vertical; min-height:88px; line-height:1.5;}
+  textarea::placeholder{color:var(--muted); opacity:.8;}
+  input[type=text],input[type=number],input[type=tel]{width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--line); background:var(--paper-raised); color:var(--ink); font-size:.95rem;}
+
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:14px 18px; border-radius:12px; border:none; background:var(--accent); color:#fff; font-weight:700; font-size:1rem; cursor:pointer;}
+  .btn:active{background:var(--accent-strong);}
+  .btn:disabled{opacity:.45; cursor:not-allowed;}
+  .btn.secondary{background:var(--paper-raised); color:var(--ink); border:1px solid var(--line);}
+  .btn.ghost{background:transparent; color:var(--muted); font-weight:600; width:auto; padding:8px 4px;}
+  .btn.small{width:auto; padding:9px 16px; font-size:.88rem;}
+
+  .notice{background:var(--warn-soft); color:var(--ink); border-radius:10px; padding:12px 14px; font-size:.88rem; margin-bottom:18px;}
+  .notice.error{background:var(--bad-soft);}
+
+  .loading{display:flex; align-items:center; gap:10px; padding:20px 4px; color:var(--muted); font-family:var(--font-hand); font-size:1.3rem;}
+  .spinner{width:18px; height:18px; border-radius:50%; border:2.5px solid var(--line); border-top-color:var(--accent); animation:spin .8s linear infinite; flex-shrink:0;}
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .result-photo{border-radius:12px; overflow:hidden; border:1px solid var(--line); margin-bottom:20px; max-height:220px;}
+  .result-photo img{width:100%; height:100%; object-fit:cover; display:block;}
+  .matiere-tag{display:inline-block; background:var(--accent-soft); color:var(--accent-strong); font-weight:700; font-size:.78rem; letter-spacing:.03em; text-transform:uppercase; padding:5px 11px; border-radius:99px; margin-bottom:14px;}
+  .card{background:var(--paper-raised); border:1px solid var(--line); border-radius:14px; padding:20px 20px 18px; margin-bottom:18px;}
+  .card h3{font-family:var(--font-body); font-weight:700; font-size:.78rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 10px;}
+  .card p{margin:0; font-size:.97rem;}
+
+  .quiz-item{margin-bottom:20px;}
+  .quiz-item .q{font-weight:700; margin-bottom:8px; font-size:.97rem;}
+  .quiz-item .qnum{color:var(--accent); margin-right:6px;}
+  .correction{margin-top:10px; padding:12px 14px; border-radius:10px; display:flex; gap:10px; align-items:flex-start;}
+  .correction.correct{background:var(--good-soft);}
+  .correction.partiel{background:var(--warn-soft);}
+  .correction.a_revoir{background:var(--bad-soft);}
+  .correction .badge{font-size:1.1rem; line-height:1; flex-shrink:0;}
+  .correction .txt{font-family:var(--font-hand); font-size:1.2rem; line-height:1.3;}
+  .correction.correct .txt{color:var(--good);}
+  .correction.partiel .txt{color:var(--warn);}
+  .correction.a_revoir .txt{color:var(--bad);}
+
+  .score-banner{text-align:center; padding:22px 16px; border-radius:14px; background:var(--paper-sunken); margin-bottom:18px;}
+  .score-banner .num{font-family:var(--font-display); font-size:2.4rem; font-weight:700;}
+  .score-banner .enc{font-family:var(--font-hand); font-size:1.25rem; color:var(--accent-strong); margin-top:4px;}
+  .actions-row{display:flex; gap:10px; margin-top:8px;}
+
+  .stats-row{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:24px;}
+  .stat{background:var(--paper-raised); border:1px solid var(--line); border-radius:12px; padding:14px 10px; text-align:center;}
+  .stat .val{font-family:var(--font-display); font-size:1.5rem; font-weight:600;}
+  .stat .lbl{font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-top:2px;}
+
+  .seance{background:var(--paper-raised); border:1px solid var(--line); border-radius:12px; padding:16px 16px; margin-bottom:12px; cursor:pointer;}
+  .seance-top{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:6px;}
+  .seance-top .matiere{font-weight:700; font-size:.92rem;}
+  .seance-top .date{font-size:.78rem; color:var(--muted);}
+  .seance-score{font-size:.8rem; font-weight:700; padding:3px 9px; border-radius:99px; background:var(--good-soft); color:var(--good); white-space:nowrap;}
+  .seance-excerpt{color:var(--muted); font-size:.88rem; margin:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+  .seance-full{margin-top:12px; padding-top:12px; border-top:1px solid var(--line); font-size:.9rem;}
+  .empty-state{text-align:center; padding:50px 20px; color:var(--muted);}
+  .empty-state .icon{font-size:2rem; margin-bottom:10px; display:block;}
+
+  /* parent */
+  .pin-box{max-width:280px; margin:40px auto; text-align:center;}
+  .pin-box .icon{font-size:2.4rem; margin-bottom:14px;}
+  .pin-box input{text-align:center; font-size:1.6rem; letter-spacing:.5rem; padding:14px; font-family:var(--font-display); font-weight:600;}
+  .pin-box .btn{margin-top:14px;}
+  .pin-box .switch{margin-top:16px; font-size:.82rem; color:var(--muted); background:none; border:none; text-decoration:underline; cursor:pointer;}
+
+  .bulletin-row{background:var(--paper-raised); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:12px; cursor:pointer;}
+  .bulletin-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
+  .bulletin-top .periode{font-weight:700;}
+  .bulletin-top .moyenne{font-family:var(--font-display); font-size:1.3rem; color:var(--accent-strong);}
+  .matiere-line{display:flex; justify-content:space-between; padding:6px 0; border-top:1px solid var(--line); font-size:.9rem;}
+  .matiere-line:first-of-type{border-top:none;}
+  .matiere-line .note{font-weight:700; font-variant-numeric:tabular-nums;}
+
+  .edit-grid{display:flex; flex-direction:column; gap:10px; margin-bottom:14px;}
+  .edit-matiere{display:grid; grid-template-columns:2fr 1fr; gap:8px; align-items:center; background:var(--paper-sunken); padding:10px; border-radius:10px;}
+  .edit-matiere input{padding:8px 10px; font-size:.88rem;}
+  .edit-matiere .note-group{display:flex; align-items:center; gap:4px; font-size:.85rem; color:var(--muted);}
+  .parent-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;}
+  .link-btn{background:none; border:none; color:var(--muted); font-size:.82rem; text-decoration:underline; cursor:pointer; padding:0;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="mark">67 <em>TEEN</em></span>
+    <span class="tagline">ton assistant révisions</span>
+  </div>
+  <nav>
+    <button id="tab-new" class="active">Nouvelle séance</button>
+    <button id="tab-history">Historique</button>
+    <button id="tab-parent">🔒 Parent</button>
+  </nav>
+</header>
+
+<main>
+
+  <section id="view-new">
+    <h2>Un cours à réviser ?</h2>
+    <p class="hint">Prends-le en photo, ajoute une remarque si besoin, et laisse 67 TEEN te le réexpliquer.</p>
+
+    <div class="field">
+      <label>Matière</label>
+      <div class="chips" id="chips-matiere">
+        <button class="chip" data-m="Maths">Maths</button>
+        <button class="chip" data-m="Français">Français</button>
+        <button class="chip" data-m="Histoire-Géo">Histoire-Géo</button>
+        <button class="chip" data-m="SVT">SVT</button>
+        <button class="chip" data-m="Physique-Chimie">Physique-Chimie</button>
+        <button class="chip" data-m="Anglais">Anglais</button>
+        <button class="chip" data-m="Autre">Autre</button>
+      </div>
+      <input type="text" id="matiere-autre" class="matiere-autre" placeholder="Précise la matière" hidden>
+    </div>
+
+    <div class="field">
+      <label>Photo du cours ou des notes</label>
+      <div class="dropzone" id="dropzone">
+        <span class="icon">📷</span>
+        <span class="label">Ajouter une photo</span>
+        <span class="sub">cahier, poly, notes de classe...</span>
+        <input type="file" accept="image/*" capture="environment" id="photo-input">
+      </div>
+      <div class="photo-preview" id="photo-preview">
+        <img id="photo-img" alt="Aperçu de la photo du cours">
+        <button class="remove" id="photo-remove">Retirer la photo</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label id="label-comment">Une remarque (facultatif)</label>
+      <textarea id="comment-input" placeholder="Ex : « je n'ai pas compris le passage sur les fractions » — ou colle le texte du cours si tu n'as pas de photo."></textarea>
+    </div>
+
+    <button class="btn" id="btn-analyser" disabled>Analyser mon cours</button>
+
+    <div class="loading" id="loading-analyse" hidden><span class="spinner"></span> 67 TEEN lit ton cours...</div>
+    <div class="notice error" id="error-analyse" hidden></div>
+  </section>
+
+  <section id="view-result" hidden></section>
+
+  <section id="view-history" hidden>
+    <h2>Historique</h2>
+    <p class="hint">Tes séances de révision, matière par matière.</p>
+    <div id="history-content"></div>
+  </section>
+
+  <section id="view-parent" hidden></section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+  const SUPABASE_URL = 'https://ukwtqmicldxkifjicmbi.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrd3RxbWljbGR4a2lmamljbWJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc1NTgsImV4cCI6MjA5MzczMzU1OH0.j9DVTK1xSQ6xecsMfqTEBNsBP5zKDVKBmjXJSk74crQ';
+  const FN_URL = SUPABASE_URL + '/functions/v1/';
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  async function callFn(name, payload){
+    const res = await fetch(FN_URL + name, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        'apikey': SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify(payload)
+    });
+    let data;
+    try { data = await res.json(); } catch(e){ data = {}; }
+    if (!res.ok || data.error) {
+      const err = new Error(data.message || data.error || 'Erreur serveur');
+      err.code = data.error;
+      throw err;
+    }
+    return data;
+  }
+
+  function fileToBase64(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        resolve(result.slice(result.indexOf(',') + 1));
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str == null ? '' : String(str);
+    return d.innerHTML;
+  }
+
+  function copyForFnError(code){
+    switch(code){
+      case 'unknown_action': return "Une erreur interne est survenue — réessaie.";
+      default: return "Un problème est survenu pendant l'analyse — réessaie dans un instant.";
+    }
+  }
+
+  const $ = (id) => document.getElementById(id);
+
+  // ---------------- navigation ----------------
+  function switchView(name){
+    $('view-new').hidden = name !== 'new';
+    $('view-result').hidden = name !== 'result';
+    $('view-history').hidden = name !== 'history';
+    $('view-parent').hidden = name !== 'parent';
+    $('tab-new').classList.toggle('active', name === 'new');
+    $('tab-history').classList.toggle('active', name === 'history');
+    $('tab-parent').classList.toggle('active', name === 'parent');
+    if (name === 'history') loadHistory();
+    if (name === 'parent') renderParent();
+  }
+  $('tab-new').onclick = () => switchView('new');
+  $('tab-history').onclick = () => switchView('history');
+  $('tab-parent').onclick = () => switchView('parent');
+
+  // ---------------- nouvelle séance ----------------
+  let matiereChoisie = null;
+  let photoFile = null;
+  let photoPreviewUrl = null;
+  let draft = null;
+
+  $('chips-matiere').addEventListener('click', (e) => {
+    const btn = e.target.closest('.chip');
+    if (!btn) return;
+    document.querySelectorAll('#chips-matiere .chip').forEach(c => c.classList.remove('selected'));
+    btn.classList.add('selected');
+    matiereChoisie = btn.dataset.m;
+    $('matiere-autre').hidden = matiereChoisie !== 'Autre';
+    if (matiereChoisie === 'Autre') $('matiere-autre').focus();
+    updateBtnState();
+  });
+  $('matiere-autre').addEventListener('input', updateBtnState);
+
+  $('photo-input').addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    photoFile = f;
+    if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+    photoPreviewUrl = URL.createObjectURL(f);
+    $('photo-img').src = photoPreviewUrl;
+    $('photo-preview').classList.add('show');
+    $('dropzone').style.display = 'none';
+    updateBtnState();
+  });
+  $('photo-remove').onclick = () => {
+    photoFile = null;
+    $('photo-input').value = '';
+    $('photo-preview').classList.remove('show');
+    $('dropzone').style.display = '';
+    updateBtnState();
+  };
+  $('comment-input').addEventListener('input', updateBtnState);
+
+  function currentMatiere(){
+    if (matiereChoisie === 'Autre') return $('matiere-autre').value.trim();
+    return matiereChoisie;
+  }
+  function updateBtnState(){
+    const hasContent = !!photoFile || $('comment-input').value.trim().length > 15;
+    $('btn-analyser').disabled = !(hasContent && !!currentMatiere());
+  }
+
+  $('btn-analyser').onclick = analyser;
+
+  async function analyser(){
+    const matiere = currentMatiere();
+    const commentaire = $('comment-input').value.trim();
+    $('error-analyse').hidden = true;
+    $('loading-analyse').hidden = false;
+    $('btn-analyser').disabled = true;
+
+    try {
+      const payload = { action: 'analyser', matiere };
+      if (photoFile) {
+        payload.imageBase64 = await fileToBase64(photoFile);
+        payload.imageMediaType = photoFile.type || 'image/jpeg';
+        if (commentaire) payload.commentaire = commentaire;
+      } else {
+        payload.texteCours = commentaire;
+      }
+
+      const data = await callFn('teen-ai', payload);
+
+      draft = {
+        matiere: data.matiere || matiere,
+        resume: data.resume || '',
+        reexplication: data.reexplication || '',
+        questions: Array.isArray(data.questions) ? data.questions.slice(0,6) : [],
+        answers: [], corrections: null, score: null, total: null,
+        commentaire
+      };
+      renderResult();
+      switchView('result');
+    } catch(e) {
+      $('error-analyse').hidden = false;
+      $('error-analyse').textContent = copyForFnError(e.code);
+    } finally {
+      $('loading-analyse').hidden = true;
+      updateBtnState();
+    }
+  }
+
+  function renderResult(){
+    const v = $('view-result');
+    let photoHtml = photoPreviewUrl ? '<div class="result-photo"><img src="' + photoPreviewUrl + '" alt="Photo du cours"></div>' : '';
+    v.innerHTML =
+      photoHtml +
+      '<span class="matiere-tag">' + escapeHtml(draft.matiere || 'Matière') + '</span>' +
+      '<div class="card"><h3>Résumé</h3><p>' + escapeHtml(draft.resume) + '</p></div>' +
+      '<div class="card"><h3>Ré-explication</h3><p>' + escapeHtml(draft.reexplication) + '</p></div>' +
+      '<div class="card" id="quiz-card"><h3>Vérifie que tu as compris</h3><div id="quiz-list"></div>' +
+        '<button class="btn" id="btn-corriger">Corriger mes réponses</button>' +
+        '<div class="loading" id="loading-correction" hidden><span class="spinner"></span> 67 TEEN corrige...</div>' +
+        '<div class="notice error" id="error-correction" hidden></div>' +
+      '</div>' +
+      '<button class="btn ghost" id="btn-nouvelle-seance">← Nouvelle séance</button>';
+
+    const list = $('quiz-list');
+    draft.questions.forEach((q, i) => {
+      const item = document.createElement('div');
+      item.className = 'quiz-item';
+      item.innerHTML =
+        '<div class="q"><span class="qnum">' + (i+1) + '.</span>' + escapeHtml(q) + '</div>' +
+        '<textarea data-qi="' + i + '" placeholder="Ta réponse..." rows="2"></textarea>' +
+        '<div class="correction-slot"></div>';
+      list.appendChild(item);
+    });
+
+    $('btn-corriger').onclick = corriger;
+    $('btn-nouvelle-seance').onclick = () => { resetForm(); switchView('new'); };
+  }
+
+  async function corriger(){
+    const textareas = document.querySelectorAll('#quiz-list textarea');
+    draft.answers = Array.from(textareas).map(t => t.value.trim());
+    if (draft.answers.some(a => !a)) {
+      $('error-correction').hidden = false;
+      $('error-correction').textContent = 'Réponds à toutes les questions avant de corriger.';
+      return;
+    }
+    $('error-correction').hidden = true;
+    $('loading-correction').hidden = false;
+    $('btn-corriger').disabled = true;
+
+    try {
+      const data = await callFn('teen-ai', {
+        action: 'corriger',
+        resume: draft.resume, reexplication: draft.reexplication,
+        questions: draft.questions, answers: draft.answers
+      });
+      draft.corrections = Array.isArray(data.corrections) ? data.corrections : [];
+      draft.score = typeof data.score === 'number' ? data.score : null;
+      draft.total = draft.questions.length;
+      draft.encouragement = data.encouragement || '';
+      renderCorrections();
+    } catch(e) {
+      $('error-correction').hidden = false;
+      $('error-correction').textContent = copyForFnError(e.code);
+    } finally {
+      $('loading-correction').hidden = true;
+      $('btn-corriger').disabled = false;
+    }
+  }
+
+  function renderCorrections(){
+    const slots = document.querySelectorAll('#quiz-list .correction-slot');
+    draft.corrections.forEach((c, i) => {
+      if (!slots[i]) return;
+      const niveau = ['correct','partiel','a_revoir'].includes(c.niveau) ? c.niveau : 'partiel';
+      const badge = niveau === 'correct' ? '✓' : (niveau === 'partiel' ? '~' : '✗');
+      slots[i].innerHTML = '<div class="correction ' + niveau + '"><span class="badge">' + badge + '</span><span class="txt">' + escapeHtml(c.commentaire || '') + '</span></div>';
+    });
+    document.querySelectorAll('#quiz-list textarea').forEach(t => t.disabled = true);
+
+    const card = $('quiz-card');
+    const scoreBanner = document.createElement('div');
+    scoreBanner.className = 'score-banner';
+    scoreBanner.innerHTML = '<div class="num">' + draft.score + ' / ' + draft.total + '</div><div class="enc">' + escapeHtml(draft.encouragement) + '</div>';
+    card.insertBefore(scoreBanner, card.querySelector('h3'));
+    $('btn-corriger').hidden = true;
+
+    const actions = document.createElement('div');
+    actions.className = 'actions-row';
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'btn';
+    saveBtn.textContent = 'Enregistrer cette séance';
+    saveBtn.onclick = saveSession;
+    actions.appendChild(saveBtn);
+    card.appendChild(actions);
+  }
+
+  async function saveSession(){
+    const btn = document.querySelector('.actions-row .btn');
+    btn.disabled = true;
+    btn.textContent = 'Enregistrement...';
+    try {
+      const { error } = await sb.from('teen_seances').insert({
+        matiere: draft.matiere,
+        commentaire: draft.commentaire || '',
+        resume: draft.resume,
+        reexplication: draft.reexplication,
+        questions: draft.questions,
+        answers: draft.answers,
+        corrections: draft.corrections,
+        score: draft.score,
+        total: draft.total
+      });
+      if (error) throw error;
+      btn.textContent = 'Séance enregistrée ✓';
+      setTimeout(() => { resetForm(); switchView('history'); }, 700);
+    } catch(e) {
+      btn.disabled = false;
+      btn.textContent = "Erreur — réessaie";
+    }
+  }
+
+  function resetForm(){
+    matiereChoisie = null; photoFile = null; draft = null;
+    if (photoPreviewUrl) { URL.revokeObjectURL(photoPreviewUrl); photoPreviewUrl = null; }
+    document.querySelectorAll('#chips-matiere .chip').forEach(c => c.classList.remove('selected'));
+    $('matiere-autre').hidden = true; $('matiere-autre').value = '';
+    $('photo-input').value = '';
+    $('photo-preview').classList.remove('show');
+    $('dropzone').style.display = '';
+    $('comment-input').value = '';
+    updateBtnState();
+  }
+
+  // ---------------- historique ----------------
+  async function loadHistory(){
+    const content = $('history-content');
+    content.innerHTML = '<div class="loading"><span class="spinner"></span> chargement...</div>';
+    try {
+      const { data: seances, error } = await sb.from('teen_seances').select('*').order('created_at', { ascending: false }).limit(50);
+      if (error) throw error;
+      renderHistory(seances || []);
+    } catch(e) {
+      content.innerHTML = '<div class="notice error">Impossible de charger l\'historique.</div>';
+    }
+  }
+
+  function renderHistory(seances){
+    const content = $('history-content');
+    if (!seances.length) {
+      content.innerHTML = '<div class="empty-state"><span class="icon">📓</span>Aucune séance enregistrée pour l\'instant.<br>Commence par analyser un cours !</div>';
+      return;
+    }
+    const total = seances.length;
+    const matieres = {};
+    let scoreSum = 0, scoreCount = 0;
+    seances.forEach(s => {
+      matieres[s.matiere] = (matieres[s.matiere] || 0) + 1;
+      if (typeof s.score === 'number' && typeof s.total === 'number' && s.total > 0) { scoreSum += s.score / s.total; scoreCount++; }
+    });
+    const topMatiere = Object.entries(matieres).sort((a,b) => b[1]-a[1])[0];
+    const avgScore = scoreCount ? Math.round((scoreSum / scoreCount) * 100) : null;
+
+    let html = '<div class="stats-row">' +
+      '<div class="stat"><div class="val">' + total + '</div><div class="lbl">séances</div></div>' +
+      '<div class="stat"><div class="val">' + (topMatiere ? topMatiere[0] : '—') + '</div><div class="lbl">plus travaillée</div></div>' +
+      '<div class="stat"><div class="val">' + (avgScore !== null ? avgScore + '%' : '—') + '</div><div class="lbl">score moyen</div></div>' +
+      '</div>';
+
+    seances.forEach((s) => {
+      const d = new Date(s.created_at);
+      const dateStr = isNaN(d) ? '' : d.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
+      const scoreStr = (typeof s.score === 'number' && typeof s.total === 'number') ? (s.score + '/' + s.total) : '—';
+      html += '<div class="seance">' +
+        '<div class="seance-top"><span class="matiere">' + escapeHtml(s.matiere || 'Matière') + '</span><span class="date">' + dateStr + '</span></div>' +
+        '<div class="seance-top"><p class="seance-excerpt">' + escapeHtml(s.resume || '') + '</p><span class="seance-score">' + scoreStr + '</span></div>' +
+        '<div class="seance-full" hidden><strong>Ré-explication :</strong> ' + escapeHtml(s.reexplication || '') + '</div>' +
+        '</div>';
+    });
+
+    content.innerHTML = html;
+    content.querySelectorAll('.seance').forEach(el => {
+      el.addEventListener('click', () => { const full = el.querySelector('.seance-full'); full.hidden = !full.hidden; });
+    });
+  }
+
+  // ---------------- espace parent ----------------
+  let parentUnlocked = sessionStorage.getItem('teen_parent_unlocked') === '1';
+
+  async function renderParent(){
+    const v = $('view-parent');
+    v.innerHTML = '<div class="loading"><span class="spinner"></span> chargement...</div>';
+    let status;
+    try { status = await callFn('teen-parent', { action: 'status' }); }
+    catch(e) { v.innerHTML = '<div class="notice error">Impossible de contacter l\'espace parent — réessaie.</div>'; return; }
+
+    if (!status.configured) return renderParentSetup(v);
+    if (!parentUnlocked) return renderParentLock(v);
+    renderParentDashboard(v);
+  }
+
+  function renderParentSetup(v){
+    v.innerHTML =
+      '<div class="pin-box"><div class="icon">🔒</div>' +
+      '<h2>Configurer l\'accès parent</h2>' +
+      '<p class="hint">Choisis un code à 4 chiffres pour retrouver le suivi des bulletins.</p>' +
+      '<input type="tel" inputmode="numeric" maxlength="6" id="pin-new" placeholder="••••">' +
+      '<button class="btn" id="pin-setup-btn">Créer le code</button>' +
+      '<div class="notice error" id="pin-setup-error" hidden></div>' +
+      '</div>';
+    $('pin-setup-btn').onclick = async () => {
+      const pin = $('pin-new').value.trim();
+      if (!/^\d{4,6}$/.test(pin)) {
+        $('pin-setup-error').hidden = false;
+        $('pin-setup-error').textContent = 'Le code doit contenir 4 à 6 chiffres.';
+        return;
+      }
+      try {
+        await callFn('teen-parent', { action: 'set', pin });
+        parentUnlocked = true;
+        sessionStorage.setItem('teen_parent_unlocked', '1');
+        renderParent();
+      } catch(e) {
+        $('pin-setup-error').hidden = false;
+        $('pin-setup-error').textContent = "Impossible de créer le code — réessaie.";
+      }
+    };
+  }
+
+  function renderParentLock(v){
+    v.innerHTML =
+      '<div class="pin-box"><div class="icon">🔒</div>' +
+      '<h2>Espace parent</h2>' +
+      '<p class="hint">Entre le code pour voir le suivi des bulletins.</p>' +
+      '<input type="tel" inputmode="numeric" maxlength="6" id="pin-check">' +
+      '<button class="btn" id="pin-check-btn">Déverrouiller</button>' +
+      '<div class="notice error" id="pin-check-error" hidden></div>' +
+      '</div>';
+    $('pin-check-btn').onclick = async () => {
+      const pin = $('pin-check').value.trim();
+      try {
+        const res = await callFn('teen-parent', { action: 'verify', pin });
+        if (res.ok) {
+          parentUnlocked = true;
+          sessionStorage.setItem('teen_parent_unlocked', '1');
+          renderParent();
+        } else {
+          $('pin-check-error').hidden = false;
+          $('pin-check-error').textContent = 'Code incorrect.';
+        }
+      } catch(e) {
+        $('pin-check-error').hidden = false;
+        $('pin-check-error').textContent = "Erreur — réessaie.";
+      }
+    };
+  }
+
+  async function renderParentDashboard(v){
+    v.innerHTML =
+      '<div class="parent-header"><h2>Bulletins de notes</h2><button class="link-btn" id="btn-change-pin">Changer le code</button></div>' +
+      '<p class="hint">Photographie le bulletin si l\'école ne propose pas de connexion automatique.</p>' +
+      '<div class="dropzone" id="bulletin-dropzone"><span class="icon">🧾</span><span class="label">Photographier un bulletin</span><span class="sub">toutes les notes seront relues avant d\'être enregistrées</span>' +
+      '<input type="file" accept="image/*" capture="environment" id="bulletin-input"></div>' +
+      '<div id="bulletin-loading" class="loading" hidden><span class="spinner"></span> 67 TEEN lit le bulletin...</div>' +
+      '<div id="bulletin-error" class="notice error" hidden></div>' +
+      '<div id="bulletin-review"></div>' +
+      '<div id="bulletins-list"></div>';
+
+    $('btn-change-pin').onclick = renderChangePin;
+    $('bulletin-input').addEventListener('change', handleBulletinPhoto);
+    loadBulletins();
+  }
+
+  function renderChangePin(){
+    const v = $('view-parent');
+    v.innerHTML =
+      '<div class="pin-box"><div class="icon">🔒</div><h2>Changer le code</h2>' +
+      '<label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;">Code actuel</label>' +
+      '<input type="tel" inputmode="numeric" maxlength="6" id="pin-old">' +
+      '<label style="display:block;font-size:.85rem;font-weight:700;margin:14px 0 6px;">Nouveau code</label>' +
+      '<input type="tel" inputmode="numeric" maxlength="6" id="pin-new2">' +
+      '<button class="btn" id="pin-change-btn">Enregistrer</button>' +
+      '<button class="pin-box switch" id="pin-cancel">Annuler</button>' +
+      '<div class="notice error" id="pin-change-error" hidden></div></div>';
+    $('pin-cancel').onclick = () => renderParent();
+    $('pin-change-btn').onclick = async () => {
+      const oldPin = $('pin-old').value.trim();
+      const pin = $('pin-new2').value.trim();
+      if (!/^\d{4,6}$/.test(pin)) {
+        $('pin-change-error').hidden = false;
+        $('pin-change-error').textContent = 'Le nouveau code doit contenir 4 à 6 chiffres.';
+        return;
+      }
+      try {
+        await callFn('teen-parent', { action: 'set', pin, oldPin });
+        renderParent();
+      } catch(e) {
+        $('pin-change-error').hidden = false;
+        $('pin-change-error').textContent = e.code === 'wrong_old_pin' ? "Le code actuel n'est pas correct." : "Erreur — réessaie.";
+      }
+    };
+  }
+
+  let bulletinDraft = null;
+
+  async function handleBulletinPhoto(e){
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    $('bulletin-error').hidden = true;
+    $('bulletin-loading').hidden = false;
+    $('bulletin-review').innerHTML = '';
+    try {
+      const imageBase64 = await fileToBase64(f);
+      const data = await callFn('teen-ai', { action: 'bulletin', imageBase64, imageMediaType: f.type || 'image/jpeg' });
+      bulletinDraft = {
+        periode: data.periode || '',
+        matieres: Array.isArray(data.matieres) ? data.matieres : [],
+        moyenne_generale: data.moyenne_generale,
+        notes_brutes: data.notes_brutes || ''
+      };
+      renderBulletinReview();
+    } catch(e) {
+      $('bulletin-error').hidden = false;
+      $('bulletin-error').textContent = "Impossible de lire cette photo — réessaie avec une image plus nette.";
+    } finally {
+      $('bulletin-loading').hidden = true;
+      $('bulletin-input').value = '';
+    }
+  }
+
+  function renderBulletinReview(){
+    const box = $('bulletin-review');
+    let rows = bulletinDraft.matieres.map((m, i) =>
+      '<div class="edit-matiere">' +
+        '<input type="text" data-i="' + i + '" data-f="matiere" value="' + escapeHtml(m.matiere || '') + '" placeholder="Matière">' +
+        '<div class="note-group"><input type="text" data-i="' + i + '" data-f="note" value="' + escapeHtml(m.note != null ? m.note : '') + '" placeholder="Note" style="width:52px;">/<input type="text" data-i="' + i + '" data-f="sur" value="' + escapeHtml(m.sur != null ? m.sur : 20) + '" placeholder="20" style="width:44px;"></div>' +
+      '</div>'
+    ).join('');
+
+    box.innerHTML =
+      '<div class="card">' +
+        '<h3>Vérifie avant d\'enregistrer</h3>' +
+        '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:6px;">Période</label>' +
+        '<input type="text" id="bulletin-periode" value="' + escapeHtml(bulletinDraft.periode) + '" style="margin-bottom:14px;">' +
+        '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:6px;">Moyenne générale</label>' +
+        '<input type="text" id="bulletin-moyenne" value="' + escapeHtml(bulletinDraft.moyenne_generale != null ? bulletinDraft.moyenne_generale : '') + '" style="margin-bottom:16px;">' +
+        '<div class="edit-grid" id="bulletin-matieres">' + rows + '</div>' +
+        (bulletinDraft.notes_brutes ? '<p class="hint" style="margin-top:0;">Texte non classé : ' + escapeHtml(bulletinDraft.notes_brutes) + '</p>' : '') +
+        '<div class="actions-row"><button class="btn secondary" id="bulletin-cancel">Annuler</button><button class="btn" id="bulletin-save">Enregistrer le bulletin</button></div>' +
+      '</div>';
+
+    box.querySelectorAll('.edit-matiere input').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const i = Number(inp.dataset.i), f = inp.dataset.f;
+        bulletinDraft.matieres[i][f] = inp.value;
+      });
+    });
+    $('bulletin-cancel').onclick = () => { bulletinDraft = null; box.innerHTML = ''; };
+    $('bulletin-save').onclick = saveBulletin;
+  }
+
+  async function saveBulletin(){
+    const btn = $('bulletin-save');
+    btn.disabled = true; btn.textContent = 'Enregistrement...';
+    const periode = $('bulletin-periode').value.trim();
+    const moyenneRaw = $('bulletin-moyenne').value.trim();
+    const moyenne = moyenneRaw ? parseFloat(moyenneRaw.replace(',', '.')) : null;
+    try {
+      const { error } = await sb.from('teen_bulletins').insert({
+        periode,
+        matieres: bulletinDraft.matieres,
+        moyenne_generale: isNaN(moyenne) ? null : moyenne,
+        notes_brutes: bulletinDraft.notes_brutes || ''
+      });
+      if (error) throw error;
+      bulletinDraft = null;
+      $('bulletin-review').innerHTML = '';
+      loadBulletins();
+    } catch(e) {
+      btn.disabled = false; btn.textContent = 'Enregistrer le bulletin';
+      $('bulletin-error').hidden = false;
+      $('bulletin-error').textContent = "Impossible d'enregistrer — réessaie.";
+    }
+  }
+
+  async function loadBulletins(){
+    const list = $('bulletins-list');
+    if (!list) return;
+    list.innerHTML = '<div class="loading"><span class="spinner"></span> chargement...</div>';
+    try {
+      const { data: bulletins, error } = await sb.from('teen_bulletins').select('*').order('created_at', { ascending: false }).limit(30);
+      if (error) throw error;
+      if (!bulletins || !bulletins.length) {
+        list.innerHTML = '<div class="empty-state"><span class="icon">🧾</span>Aucun bulletin enregistré pour l\'instant.</div>';
+        return;
+      }
+      list.innerHTML = bulletins.map(b => {
+        const matieresHtml = (b.matieres || []).map(m =>
+          '<div class="matiere-line"><span>' + escapeHtml(m.matiere || '') + '</span><span class="note">' + escapeHtml(m.note != null ? m.note : '—') + '/' + escapeHtml(m.sur || 20) + '</span></div>'
+        ).join('');
+        return '<div class="bulletin-row">' +
+          '<div class="bulletin-top"><span class="periode">' + escapeHtml(b.periode || 'Bulletin') + '</span><span class="moyenne">' + (b.moyenne_generale != null ? b.moyenne_generale : '—') + '</span></div>' +
+          matieresHtml +
+          '</div>';
+      }).join('');
+    } catch(e) {
+      list.innerHTML = '<div class="notice error">Impossible de charger les bulletins.</div>';
+    }
+  }
+
+})();
+</script>
+</body>
+</html>
