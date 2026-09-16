@@ -54,6 +54,22 @@
   textarea,input{font-family:inherit;}
   :focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 
+  /* ---- mouvement : discret, jamais décoratif ---- */
+  button, .chip, .qcm-option, .seance, .bulletin-row, input, textarea, select {
+    transition: background-color .16s ease, border-color .16s ease, color .16s ease, transform .1s ease, box-shadow .16s ease;
+  }
+  .btn:active, .chip:active, .qcm-option:not(:disabled):active, .link-btn:active { transform: scale(.97); }
+  .seance, .bulletin-row { transition: background-color .16s ease, border-color .16s ease, transform .12s ease; }
+  .seance:active, .bulletin-row:active { transform: scale(.99); }
+  @keyframes riseIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .reveal { animation: riseIn .32s ease both; }
+  .reveal-1 { animation-delay: .04s; }
+  .reveal-2 { animation-delay: .1s; }
+  .reveal-3 { animation-delay: .16s; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+  }
+
   header{position:sticky; top:0; z-index:10; background:var(--paper); border-bottom:1px solid var(--line); padding:16px 20px 0;}
   .brand{display:flex; align-items:baseline; gap:10px; max-width:640px; margin:0 auto;}
   .brand .mark{font-family:var(--font-display); font-weight:700; font-size:1.5rem; letter-spacing:-.01em;}
@@ -61,6 +77,7 @@
   .brand .tagline{color:var(--muted); font-size:.85rem;}
   .profile-pill{margin-left:auto; background:var(--paper-sunken); border:1px solid var(--line); border-radius:99px; padding:5px 12px; font-size:.78rem; font-weight:600; color:var(--ink); cursor:pointer;}
   .profile-gate{position:fixed; inset:0; background:var(--paper); z-index:50; overflow-y:auto; padding:20px;}
+  .profile-gate:not([hidden]) { animation: riseIn .22s ease both; }
 
   .landing{max-width:620px; margin:0 auto; padding:20px 0 40px; text-align:left;}
   .landing-hero{text-align:center; margin-bottom:44px;}
@@ -463,12 +480,12 @@
   function renderGateLanding(defaultEmail, message){
     $('app-gate').innerHTML =
       '<div class="landing">' +
-        '<div class="landing-hero">' +
+        '<div class="landing-hero reveal">' +
           '<div class="mark">67 <em>TEEN</em></div>' +
           '<p>L’assistant qui aide vraiment ton ado à réviser — pas juste à recopier une réponse.</p>' +
         '</div>' +
 
-        '<div class="landing-section">' +
+        '<div class="landing-section reveal reveal-1">' +
           '<h2>Comment ça marche</h2>' +
           '<ol class="landing-steps">' +
             '<li><span class="num">1</span><span>Il prend son cours en photo, ou colle le texte à réviser.</span></li>' +
@@ -477,7 +494,7 @@
           '</ol>' +
         '</div>' +
 
-        '<div class="landing-section">' +
+        '<div class="landing-section reveal reveal-2">' +
           '<h2>Ce qui change avec 67 TEEN</h2>' +
           '<div class="landing-features">' +
             '<div class="landing-feature"><span class="icon">🎯</span><span>Un quiz exigeant, pas un questionnaire qu’on réussit sans comprendre.</span></div>' +
@@ -487,7 +504,7 @@
           '</div>' +
         '</div>' +
 
-        '<div class="landing-section">' +
+        '<div class="landing-section reveal reveal-3">' +
           '<div class="landing-trust">' +
             '<h2>Pensé pour rassurer les parents</h2>' +
             '<div class="landing-features">' +
@@ -499,7 +516,7 @@
           '</div>' +
         '</div>' +
 
-        '<div class="landing-section">' +
+        '<div class="landing-section reveal reveal-3">' +
           '<h2>Un seul abonnement, toute la famille</h2>' +
           '<div class="landing-pricing">' +
             '<div class="price">6,99€ <span>/ mois</span></div>' +
@@ -507,7 +524,7 @@
           '</div>' +
         '</div>' +
 
-        '<div class="card" style="max-width:400px; margin:0 auto;">' +
+        '<div class="card reveal reveal-3" style="max-width:400px; margin:0 auto;">' +
           (message ? '<div class="notice">' + escapeHtml(message) + '</div>' : '') +
           '<input type="email" class="gate-input" id="gate-email" placeholder="ton@email.fr" value="' + escapeHtml(defaultEmail || '') + '" style="margin-bottom:12px;">' +
           '<button class="btn" id="gate-subscribe-btn">S’abonner — 6,99€/mois</button>' +
@@ -642,6 +659,8 @@
     $('tab-new').classList.toggle('active', name === 'new');
     $('tab-history').classList.toggle('active', name === 'history');
     $('tab-parent').classList.toggle('active', name === 'parent');
+    const shown = { new: $('view-new'), result: $('view-result'), history: $('view-history'), parent: $('view-parent') }[name];
+    if (shown) { shown.classList.remove('reveal'); void shown.offsetWidth; shown.classList.add('reveal'); }
     if (name === 'history') loadHistory();
     if (name === 'parent') renderParent();
   }
@@ -803,10 +822,10 @@
     let photoHtml = photoPreviewUrl ? '<div class="result-photo"><img src="' + photoPreviewUrl + '" alt="Photo du cours"></div>' : '';
     v.innerHTML =
       photoHtml +
-      '<span class="matiere-tag">' + escapeHtml(draft.matiere || 'Matière') + '</span>' +
-      '<div class="card"><h3>Résumé</h3><p>' + escapeHtml(draft.resume) + '</p></div>' +
-      '<div class="card"><h3>Ré-explication</h3><p>' + escapeHtml(draft.reexplication) + '</p></div>' +
-      '<div class="card confidence-box" id="confidence-card">' +
+      '<span class="matiere-tag reveal">' + escapeHtml(draft.matiere || 'Matière') + '</span>' +
+      '<div class="card reveal reveal-1"><h3>Résumé</h3><p>' + escapeHtml(draft.resume) + '</p></div>' +
+      '<div class="card reveal reveal-2"><h3>Ré-explication</h3><p>' + escapeHtml(draft.reexplication) + '</p></div>' +
+      '<div class="card confidence-box reveal reveal-3" id="confidence-card">' +
         '<p style="margin:0 0 14px;">Relis si besoin — pas de pression. Quand tu te sens prêt :</p>' +
         '<button class="btn" id="btn-ready-quiz">Je pense avoir compris, on passe au quiz</button>' +
       '</div>' +
@@ -845,7 +864,8 @@
     list.innerHTML = '';
     questions.forEach((q, i) => {
       const item = document.createElement('div');
-      item.className = 'quiz-item';
+      item.className = 'quiz-item reveal';
+      item.style.animationDelay = (i * .06) + 's';
       const optsHtml = (q.options || []).map((opt, oi) =>
         '<button type="button" class="qcm-option" data-qi="' + i + '" data-oi="' + oi + '">' + escapeHtml(opt) + '</button>'
       ).join('');
@@ -888,7 +908,7 @@
       const slot = document.querySelectorAll('#quiz-list .correction-slot')[i];
       const niveau = isCorrect ? 'correct' : 'a_revoir';
       const badge = isCorrect ? '✓' : '✗';
-      slot.innerHTML = '<div class="correction ' + niveau + '"><span class="badge">' + badge + '</span><span class="txt">' + escapeHtml(q.explication || '') + '</span></div>';
+      slot.innerHTML = '<div class="correction ' + niveau + ' reveal" style="animation-delay:' + (i * .08) + 's"><span class="badge">' + badge + '</span><span class="txt">' + escapeHtml(q.explication || '') + '</span></div>';
     });
 
     draft.attempts.push({ questions, selections: quizSelections.slice(), score, total: questions.length });
@@ -896,7 +916,7 @@
 
     const card = $('quiz-card');
     const scoreBanner = document.createElement('div');
-    scoreBanner.className = 'score-banner';
+    scoreBanner.className = 'score-banner reveal';
     scoreBanner.innerHTML = '<div class="num">' + score + ' / ' + questions.length + '</div>';
     card.insertBefore(scoreBanner, card.querySelector('h3'));
 
@@ -980,8 +1000,8 @@
     draft.syntheseFinale = synthese;
 
     finalBox.innerHTML =
-      (synthese ? '<div class="card"><h3>Ce qu’il faut retravailler</h3><p>' + escapeHtml(synthese) + '</p>' + (encouragement ? '<p class="annotation">' + escapeHtml(encouragement) + '</p>' : '') + '</div>' : '') +
-      '<button class="btn" id="btn-save-session">Enregistrer cette séance</button>';
+      (synthese ? '<div class="card reveal"><h3>Ce qu’il faut retravailler</h3><p>' + escapeHtml(synthese) + '</p>' + (encouragement ? '<p class="annotation">' + escapeHtml(encouragement) + '</p>' : '') + '</div>' : '') +
+      '<button class="btn reveal" id="btn-save-session">Enregistrer cette séance</button>';
     $('btn-save-session').onclick = saveSession;
   }
 
@@ -1070,18 +1090,18 @@
     const topMatiere = Object.entries(matieres).sort((a,b) => b[1]-a[1])[0];
     const avgScore = scoreCount ? Math.round((scoreSum / scoreCount) * 100) : null;
 
-    let html = '<div class="stats-row">' +
+    let html = '<div class="stats-row reveal">' +
       '<div class="stat"><div class="val">' + total + '</div><div class="lbl">séances</div></div>' +
       '<div class="stat"><div class="val">' + (topMatiere ? topMatiere[0] : '—') + '</div><div class="lbl">plus travaillée</div></div>' +
       '<div class="stat"><div class="val">' + (avgScore !== null ? avgScore + '%' : '—') + '</div><div class="lbl">score moyen</div></div>' +
       '</div>';
 
-    seances.forEach((s) => {
+    seances.forEach((s, si) => {
       const d = new Date(s.created_at);
       const dateStr = isNaN(d) ? '' : d.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
       const scoreStr = (typeof s.score === 'number' && typeof s.total === 'number') ? (s.score + '/' + s.total) : '—';
       const moyStr = (typeof s.moyenne_declaree === 'number') ? ' · moyenne déclarée ' + s.moyenne_declaree + '/20' : '';
-      html += '<div class="seance">' +
+      html += '<div class="seance reveal" style="animation-delay:' + Math.min(si * .05, .3) + 's">' +
         '<div class="seance-top"><span class="matiere">' + escapeHtml(s.matiere || 'Matière') + '</span><span class="date">' + dateStr + '</span></div>' +
         '<div class="seance-top"><p class="seance-excerpt">' + escapeHtml(s.resume || '') + '</p><span class="seance-score">' + scoreStr + '</span></div>' +
         (moyStr ? '<p class="seance-excerpt" style="margin-top:4px;font-size:.8rem;">' + moyStr.replace(' · ', '') + '</p>' : '') +
