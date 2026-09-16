@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>67 TEEN</title>
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="theme-color" content="#E15A2E">
 <meta name="apple-mobile-web-app-title" content="67 TEEN">
 <style>
@@ -89,9 +91,16 @@
   .num-pop-2 { animation: numDrop7 .85s ease-out both; animation-delay: .18s; }
   .hero-teen { opacity: 0; animation: riseIn .3s ease both; animation-delay: 1.1s; }
   .hero-sub { opacity: 0; animation: riseIn .32s ease both; animation-delay: 1.22s; }
-  .landing .reveal-1 { animation-delay: 1.32s; }
-  .landing .reveal-2 { animation-delay: 1.42s; }
-  .landing .reveal-3 { animation-delay: 1.54s; }
+  /* ---- apparition progressive au scroll ---- */
+  .scroll-reveal { opacity: 0; transform: translateY(28px) scale(.97); transition: opacity .7s cubic-bezier(.16,.8,.24,1), transform .7s cubic-bezier(.16,.8,.24,1); }
+  .scroll-reveal.in-view { opacity: 1; transform: translateY(0) scale(1); }
+  .landing-steps li:nth-child(1){transition-delay:0s;}
+  .landing-steps li:nth-child(2){transition-delay:.12s;}
+  .landing-steps li:nth-child(3){transition-delay:.24s;}
+  .landing-features .landing-feature:nth-child(1){transition-delay:0s;}
+  .landing-features .landing-feature:nth-child(2){transition-delay:.09s;}
+  .landing-features .landing-feature:nth-child(3){transition-delay:.18s;}
+  .landing-features .landing-feature:nth-child(4){transition-delay:.27s;}
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
   }
@@ -122,7 +131,7 @@
   .landing-trust{background:var(--good-soft); border-radius:16px; padding:26px 24px;}
   .landing-trust h2{color:var(--good);}
   .landing-pricing{background:var(--paper-raised); border:1px solid var(--line); border-radius:16px; padding:26px 22px; text-align:center;}
-  .landing-pricing .price{font-family:var(--font-display); font-size:2.1rem; font-weight:700;}
+  .landing-pricing .price{font-family:var(--font-display); font-size:2.1rem; font-weight:700; white-space:nowrap;}
   .landing-pricing .price span{font-size:.95rem; color:var(--muted); font-weight:400; font-family:var(--font-body);}
   nav{max-width:640px; margin:14px auto 0; display:flex; gap:4px;}
   nav button{flex:1; background:none; border:none; padding:10px 4px 12px; font-size:.86rem; font-weight:600; color:var(--muted); border-bottom:2px solid transparent; cursor:pointer;}
@@ -246,7 +255,7 @@
 
 <header id="app-header" hidden>
   <div class="brand">
-    <span class="mark">67 <em>TEEN</em></span>
+    <span class="mark">67 <em>TEEN</em></span>
     <span class="tagline">ton assistant révisions</span>
     <button id="profile-pill" class="profile-pill" hidden></button>
   </div>
@@ -261,7 +270,7 @@
 
   <section id="view-new">
     <h2>Un cours à réviser ?</h2>
-    <p class="hint" id="new-hint">Prends-le en photo, ajoute une remarque si besoin, et laisse 67 TEEN te le réexpliquer.</p>
+    <p class="hint" id="new-hint">Prends-le en photo, ajoute une remarque si besoin, et laisse 67 TEEN te le réexpliquer.</p>
 
     <div class="field">
       <label>Matière</label>
@@ -311,7 +320,7 @@
 
     <button class="btn" id="btn-analyser" disabled>Analyser mon cours</button>
 
-    <div class="loading" id="loading-analyse" hidden><span class="spinner"></span> 67 TEEN lit ton cours...</div>
+    <div class="loading" id="loading-analyse" hidden><span class="spinner"></span> 67 TEEN lit ton cours...</div>
     <div class="notice error" id="error-analyse" hidden></div>
   </section>
 
@@ -333,7 +342,7 @@
   <div class="pin-box">
     <div class="icon">👋</div>
     <h2 id="profile-gate-title">Avant de commencer</h2>
-    <p class="hint">Ça permet à 67 TEEN d'adapter ses explications à ton niveau, et de garder ton historique bien séparé de celui des autres.</p>
+    <p class="hint">Ça permet à 67 TEEN d'adapter ses explications à ton niveau, et de garder ton historique bien séparé de celui des autres.</p>
     <label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;text-align:left;">Prénom</label>
     <input type="text" id="profile-prenom" style="margin-bottom:14px;">
     <label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;text-align:left;">Âge</label>
@@ -503,50 +512,64 @@
     if (el) { el.hidden = false; el.textContent = msg; }
   }
 
+  function initScrollReveal(){
+    const els = document.querySelectorAll('.scroll-reveal');
+    if (!('IntersectionObserver' in window)) { els.forEach(el => el.classList.add('in-view')); return; }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(el => io.observe(el));
+  }
+
   function renderGateLanding(defaultEmail, message){
     $('app-gate').innerHTML =
       '<div class="landing">' +
         '<div class="landing-hero">' +
           '<div class="mark hero-mark">' +
             '<span class="num-pop num-pop-1">6</span>' +
-            '<span class="num-pop num-pop-2">7</span> ' +
+            '<span class="num-pop num-pop-2">7</span> ' +
             '<em class="hero-teen">TEEN</em>' +
           '</div>' +
           '<p class="hero-sub">L’assistant qui aide vraiment ton ado à réviser — pas juste à recopier une réponse.</p>' +
         '</div>' +
 
-        '<div class="landing-section reveal reveal-1">' +
+        '<div class="landing-section scroll-reveal">' +
           '<h2>Comment ça marche</h2>' +
           '<ol class="landing-steps">' +
-            '<li><span class="num">1</span><span>Il prend son cours en photo, ou colle le texte à réviser.</span></li>' +
-            '<li><span class="num">2</span><span>67 TEEN résume simplement, réexplique en détail, puis le challenge avec un vrai quiz — pas des questions faciles.</span></li>' +
-            '<li><span class="num">3</span><span>Il peut recommencer le quiz plusieurs fois ; l’IA revient ensuite sur ce qui n’est pas encore acquis.</span></li>' +
+            '<li class="scroll-reveal"><span class="num">1</span><span>Il prend son cours en photo, ou colle le texte à réviser.</span></li>' +
+            '<li class="scroll-reveal"><span class="num">2</span><span>67 TEEN résume simplement, réexplique en détail, puis le challenge avec un vrai quiz — pas des questions faciles.</span></li>' +
+            '<li class="scroll-reveal"><span class="num">3</span><span>Il peut recommencer le quiz plusieurs fois ; l’IA revient ensuite sur ce qui n’est pas encore acquis.</span></li>' +
           '</ol>' +
         '</div>' +
 
-        '<div class="landing-section reveal reveal-2">' +
-          '<h2>Ce qui change avec 67 TEEN</h2>' +
+        '<div class="landing-section scroll-reveal">' +
+          '<h2>Ce qui change avec 67 TEEN</h2>' +
           '<div class="landing-features">' +
-            '<div class="landing-feature"><span class="icon">🎯</span><span>Un quiz exigeant, pas un questionnaire qu’on réussit sans comprendre.</span></div>' +
-            '<div class="landing-feature"><span class="icon">🧾</span><span>Le suivi des bulletins de notes, en attendant une connexion directe à l’école.</span></div>' +
-            '<div class="landing-feature"><span class="icon">🔒</span><span>Un espace parent séparé, avec les séances et les scores de chaque enfant.</span></div>' +
-            '<div class="landing-feature"><span class="icon">👤</span><span>Un historique propre à chaque enfant — personne ne voit les séances des autres.</span></div>' +
+            '<div class="landing-feature scroll-reveal"><span class="icon">🎯</span><span>Un quiz exigeant, pas un questionnaire qu’on réussit sans comprendre.</span></div>' +
+            '<div class="landing-feature scroll-reveal"><span class="icon">🧾</span><span>Le suivi des bulletins de notes, en attendant une connexion directe à l’école.</span></div>' +
+            '<div class="landing-feature scroll-reveal"><span class="icon">🔒</span><span>Un espace parent séparé, avec les séances et les scores de chaque enfant.</span></div>' +
+            '<div class="landing-feature scroll-reveal"><span class="icon">👤</span><span>Un historique propre à chaque enfant — personne ne voit les séances des autres.</span></div>' +
           '</div>' +
         '</div>' +
 
-        '<div class="landing-section reveal reveal-3">' +
+        '<div class="landing-section scroll-reveal">' +
           '<div class="landing-trust">' +
             '<h2>Pensé pour rassurer les parents</h2>' +
             '<div class="landing-features">' +
-              '<div class="landing-feature"><span class="icon">🎯</span><span><strong>Uniquement les devoirs.</strong> Pas de chat libre, pas de réseaux, pas de sujets hors-sujet — l’IA ne répond qu’aux demandes de révision.</span></div>' +
-              '<div class="landing-feature"><span class="icon">👀</span><span><strong>Tu vois tout.</strong> L’espace parent, protégé par ton propre code, montre les séances, les scores et les bulletins de chaque enfant.</span></div>' +
-              '<div class="landing-feature"><span class="icon">🔐</span><span><strong>Rien n’est revendu.</strong> Pas de publicité, aucune donnée partagée avec des tiers.</span></div>' +
-              '<div class="landing-feature"><span class="icon">✋</span><span><strong>Tu gardes la main.</strong> C’est toi qui gères l’abonnement, résiliable à tout moment.</span></div>' +
+              '<div class="landing-feature scroll-reveal"><span class="icon">🎯</span><span><strong>Uniquement les devoirs.</strong> Pas de chat libre, pas de réseaux, pas de sujets hors-sujet — l’IA ne répond qu’aux demandes de révision.</span></div>' +
+              '<div class="landing-feature scroll-reveal"><span class="icon">👀</span><span><strong>Tu vois tout.</strong> L’espace parent, protégé par ton propre code, montre les séances, les scores et les bulletins de chaque enfant.</span></div>' +
+              '<div class="landing-feature scroll-reveal"><span class="icon">🔐</span><span><strong>Rien n’est revendu.</strong> Pas de publicité, aucune donnée partagée avec des tiers.</span></div>' +
+              '<div class="landing-feature scroll-reveal"><span class="icon">✋</span><span><strong>Tu gardes la main.</strong> C’est toi qui gères l’abonnement, résiliable à tout moment.</span></div>' +
             '</div>' +
           '</div>' +
         '</div>' +
 
-        '<div class="landing-section reveal reveal-3">' +
+        '<div class="landing-section scroll-reveal">' +
           '<h2>Un seul abonnement, toute la famille</h2>' +
           '<div class="landing-pricing">' +
             '<div class="price">6,99€ <span>/ mois</span></div>' +
@@ -554,7 +577,7 @@
           '</div>' +
         '</div>' +
 
-        '<div class="card reveal reveal-3" style="max-width:400px; margin:0 auto;">' +
+        '<div class="card scroll-reveal" style="max-width:400px; margin:0 auto;">' +
           (message ? '<div class="notice">' + escapeHtml(message) + '</div>' : '') +
           '<input type="email" class="gate-input" id="gate-email" placeholder="ton@email.fr" value="' + escapeHtml(defaultEmail || '') + '" style="margin-bottom:12px;">' +
           '<button class="btn" id="gate-subscribe-btn">S’abonner — 6,99€/mois</button>' +
@@ -562,6 +585,8 @@
           '<div class="notice error" id="gate-error" hidden></div>' +
         '</div>' +
       '</div>';
+
+    initScrollReveal();
 
     $('gate-subscribe-btn').onclick = async () => {
       const email = $('gate-email').value.trim();
@@ -730,12 +755,12 @@
       $('photo-input').value = '';
       $('photo-preview').classList.remove('show');
       $('dropzone').style.display = '';
-      $('new-hint').textContent = "Dis-nous le sujet à réviser, 67 TEEN prépare un cours adapté à ton niveau.";
+      $('new-hint').textContent = "Dis-nous le sujet à réviser, 67 TEEN prépare un cours adapté à ton niveau.";
       $('label-comment').textContent = 'Le sujet à réviser';
       $('comment-input').placeholder = 'Ex : « les fractions », « la Révolution française », « le passé composé »...';
     } else {
       $('field-photo').hidden = false;
-      $('new-hint').textContent = 'Prends-le en photo, ajoute une remarque si besoin, et laisse 67 TEEN te le réexpliquer.';
+      $('new-hint').textContent = 'Prends-le en photo, ajoute une remarque si besoin, et laisse 67 TEEN te le réexpliquer.';
       $('label-comment').textContent = 'Une remarque (facultatif)';
       $('comment-input').placeholder = "Ex : « je n'ai pas compris le passage sur les fractions » — ou colle le texte du cours si tu n'as pas de photo.";
     }
@@ -865,7 +890,7 @@
           '<h3>Le quiz qui challenge</h3>' +
           '<div id="quiz-list"></div>' +
           '<button class="btn" id="btn-corriger">Corriger mes réponses</button>' +
-          '<div class="loading" id="loading-correction" hidden><span class="spinner"></span> 67 TEEN corrige...</div>' +
+          '<div class="loading" id="loading-correction" hidden><span class="spinner"></span> 67 TEEN corrige...</div>' +
           '<div class="notice error" id="error-correction" hidden></div>' +
         '</div>' +
         '<div id="final-section"></div>' +
@@ -994,7 +1019,7 @@
     const card = $('quiz-card');
     card.querySelector('.actions-row')?.remove();
     const finalBox = $('final-section');
-    finalBox.innerHTML = '<div class="loading"><span class="spinner"></span> 67 TEEN prépare la synthèse...</div>';
+    finalBox.innerHTML = '<div class="loading"><span class="spinner"></span> 67 TEEN prépare la synthèse...</div>';
 
     const last = draft.attempts[draft.attempts.length - 1];
     const missed = [];
@@ -1077,7 +1102,7 @@
     $('chips-mode').querySelector('[data-mode="photo"]').classList.add('selected');
     $('matiere-autre').hidden = true; $('matiere-autre').value = '';
     $('field-photo').hidden = false;
-    $('new-hint').textContent = 'Prends-le en photo, ajoute une remarque si besoin, et laisse 67 TEEN te le réexpliquer.';
+    $('new-hint').textContent = 'Prends-le en photo, ajoute une remarque si besoin, et laisse 67 TEEN te le réexpliquer.';
     $('label-comment').textContent = 'Une remarque (facultatif)';
     $('comment-input').placeholder = "Ex : « je n'ai pas compris le passage sur les fractions » — ou colle le texte du cours si tu n'as pas de photo.";
     $('photo-input').value = '';
@@ -1230,7 +1255,7 @@
         '<p class="hint">Photographie le bulletin si l\'école ne propose pas de connexion automatique.</p>' +
         '<div class="dropzone" id="bulletin-dropzone"><span class="icon">🧾</span><span class="label">Photographier un bulletin</span> <span class="sub">toutes les notes seront relues avant d\'être enregistrées</span>' +
         '<input type="file" accept="image/*" capture="environment" id="bulletin-input"></div>' +
-        '<div id="bulletin-loading" class="loading" hidden><span class="spinner"></span> 67 TEEN lit le bulletin...</div>' +
+        '<div id="bulletin-loading" class="loading" hidden><span class="spinner"></span> 67 TEEN lit le bulletin...</div>' +
         '<div id="bulletin-error" class="notice error" hidden></div>' +
         '<div id="bulletin-review"></div>' +
         '<div id="bulletins-list"></div>' +
@@ -1240,7 +1265,7 @@
         '<div id="parent-seances-list"></div>' +
       '</div>' +
       '<div id="parent-famille-view" hidden>' +
-        '<p class="hint">Ajoute l\'email de chaque enfant pour qu\'il ait accès à 67 TEEN avec ton abonnement, sans payer en plus.</p>' +
+        '<p class="hint">Ajoute l\'email de chaque enfant pour qu\'il ait accès à 67 TEEN avec ton abonnement, sans payer en plus.</p>' +
         '<div id="famille-add-box">' +
           '<input type="email" class="gate-input" id="famille-email-input" placeholder="email-de-ton-enfant@exemple.fr">' +
           '<button class="btn" id="famille-add-btn" style="margin-top:10px;">Ajouter</button>' +
