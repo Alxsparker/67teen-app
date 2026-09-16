@@ -67,17 +67,32 @@
   .reveal-2 { animation-delay: .1s; }
   .reveal-3 { animation-delay: .16s; }
 
-  /* ---- entrée du "67" sur la page d'accueil : les chiffres arrivent en grand avant le reste ---- */
-  @keyframes numPop { 0% { opacity: 0; transform: scale(2.4); } 60% { opacity: 1; transform: scale(.92); } 100% { opacity: 1; transform: scale(1); } }
+  /* ---- entrée du "67" sur la page d'accueil : chaque chiffre tombe, lourd, et rebondit avant que le texte n'apparaisse ---- */
+  @keyframes numDrop6 {
+    0%   { opacity: 0; transform: translateY(-160px) scale(4.4) rotate(-9deg); }
+    42%  { opacity: 1; transform: translateY(8px) scale(1.18) rotate(4deg); }
+    58%  { transform: translateY(-22px) scale(.86) rotate(-3deg); }
+    72%  { transform: translateY(6px) scale(1.07) rotate(2deg); }
+    85%  { transform: translateY(-8px) scale(.97) rotate(-1deg); }
+    100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+  }
+  @keyframes numDrop7 {
+    0%   { opacity: 0; transform: translateY(-160px) scale(4.4) rotate(9deg); }
+    42%  { opacity: 1; transform: translateY(8px) scale(1.18) rotate(-4deg); }
+    58%  { transform: translateY(-22px) scale(.86) rotate(3deg); }
+    72%  { transform: translateY(6px) scale(1.07) rotate(-2deg); }
+    85%  { transform: translateY(-8px) scale(.97) rotate(1deg); }
+    100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+  }
   .hero-mark { display: inline-flex; align-items: baseline; gap: 2px; }
-  .num-pop { display: inline-block; transform-origin: center; animation: numPop .6s cubic-bezier(.2,.9,.3,1.3) both; }
-  .num-pop-1 { animation-delay: .05s; }
-  .num-pop-2 { animation-delay: .18s; }
-  .hero-teen { opacity: 0; animation: riseIn .3s ease both; animation-delay: .5s; }
-  .hero-sub { opacity: 0; animation: riseIn .32s ease both; animation-delay: .6s; }
-  .landing .reveal-1 { animation-delay: .7s; }
-  .landing .reveal-2 { animation-delay: .8s; }
-  .landing .reveal-3 { animation-delay: .92s; }
+  .num-pop { display: inline-block; transform-origin: center; opacity: 0; }
+  .num-pop-1 { animation: numDrop6 .85s ease-out both; animation-delay: 0s; }
+  .num-pop-2 { animation: numDrop7 .85s ease-out both; animation-delay: .18s; }
+  .hero-teen { opacity: 0; animation: riseIn .3s ease both; animation-delay: 1.1s; }
+  .hero-sub { opacity: 0; animation: riseIn .32s ease both; animation-delay: 1.22s; }
+  .landing .reveal-1 { animation-delay: 1.32s; }
+  .landing .reveal-2 { animation-delay: 1.42s; }
+  .landing .reveal-3 { animation-delay: 1.54s; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
   }
