@@ -113,15 +113,17 @@
   .card h3{font-family:var(--font-body); font-weight:700; font-size:.78rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 10px;}
   .card p{margin:0; font-size:.97rem;}
 
-  .quiz-item{margin-bottom:20px;}
-  .quiz-item .q{font-weight:700; margin-bottom:8px; font-size:.97rem;}
+  .quiz-item{margin-bottom:22px;}
+  .quiz-item .q{font-weight:700; margin-bottom:10px; font-size:.97rem;}
   .quiz-item .qnum{color:var(--accent); margin-right:6px;}
-  .answer-wrap{position:relative;}
-  .answer-wrap textarea{padding-right:54px;}
-  .mic-btn{position:absolute; right:8px; bottom:8px; width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:var(--paper-raised); color:var(--muted); cursor:pointer; font-size:1.05rem; display:flex; align-items:center; justify-content:center; padding:0;}
-  .mic-btn.listening{background:var(--bad); border-color:var(--bad); color:#fff; animation:mic-pulse 1.1s ease-in-out infinite;}
-  @keyframes mic-pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(193,67,47,.35); } 50%{ box-shadow:0 0 0 8px rgba(193,67,47,0); } }
-  .mic-hint{font-size:.76rem; color:var(--muted); margin-top:6px;}
+  .qcm-options{display:flex; flex-direction:column; gap:8px;}
+  .qcm-option{text-align:left; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:var(--paper-raised); color:var(--ink); font-size:.92rem; cursor:pointer; line-height:1.4;}
+  .qcm-option.selected{border-color:var(--accent); background:var(--accent-soft); font-weight:600;}
+  .qcm-option.correct{border-color:var(--good); background:var(--good-soft); font-weight:600;}
+  .qcm-option.wrong{border-color:var(--bad); background:var(--bad-soft);}
+  .qcm-option:disabled{cursor:default;}
+  .confidence-box{text-align:center;}
+  .attempt-badge{font-size:.76rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;}
   .correction{margin-top:10px; padding:12px 14px; border-radius:10px; display:flex; gap:10px; align-items:flex-start;}
   .correction.correct{background:var(--good-soft);}
   .correction.partiel{background:var(--warn-soft);}
@@ -656,9 +658,10 @@
         resume: data.resume || '',
         reexplication: data.reexplication || '',
         questions: Array.isArray(data.questions) ? data.questions.slice(0,6) : [],
-        answers: [], corrections: null, score: null, total: null,
+        attempts: [],
         commentaire
       };
+      quizSelections = [];
       renderResult();
       switchView('result');
     } catch(e) {
@@ -670,6 +673,15 @@
     }
   }
 
+  const MAX_TENTATIVES = 3;
+  let quizSelections = [];
+
+  function currentNiveau(){
+    const profile = getProfile();
+    if (profile && profile.classe) return profile.classe + (profile.age ? ' (' + profile.age + ' ans)' : '');
+    return null;
+  }
+
   function renderResult(){
     const v = $('view-result');
     let photoHtml = photoPreviewUrl ? '<div class="result-photo"><img src="' + photoPreviewUrl + '" alt="Photo du cours"></div>' : '';
@@ -678,147 +690,190 @@
       '<span class="matiere-tag">' + escapeHtml(draft.matiere || 'Matière') + '</span>' +
       '<div class="card"><h3>Résumé</h3><p>' + escapeHtml(draft.resume) + '</p></div>' +
       '<div class="card"><h3>Ré-explication</h3><p>' + escapeHtml(draft.reexplication) + '</p></div>' +
-      '<div class="card" id="quiz-card"><h3>Vérifie que tu as compris</h3><div id="quiz-list"></div>' +
-        '<button class="btn" id="btn-corriger">Corriger mes réponses</button>' +
-        '<div class="loading" id="loading-correction" hidden><span class="spinner"></span> 67 TEEN corrige...</div>' +
-        '<div class="notice error" id="error-correction" hidden></div>' +
+      '<div class="card confidence-box" id="confidence-card">' +
+        '<p style="margin:0 0 14px;">Relis si besoin — pas de pression. Quand tu te sens prêt :</p>' +
+        '<button class="btn" id="btn-ready-quiz">Je pense avoir compris, on passe au quiz</button>' +
+      '</div>' +
+      '<div id="quiz-section" hidden>' +
+        '<div class="card" id="quiz-card">' +
+          '<div class="attempt-badge" id="attempt-badge"></div>' +
+          '<h3>Le quiz qui challenge</h3>' +
+          '<div id="quiz-list"></div>' +
+          '<button class="btn" id="btn-corriger">Corriger mes réponses</button>' +
+          '<div class="loading" id="loading-correction" hidden><span class="spinner"></span> 67 TEEN corrige...</div>' +
+          '<div class="notice error" id="error-correction" hidden></div>' +
+        '</div>' +
+        '<div id="final-section"></div>' +
       '</div>' +
       '<button class="btn ghost" id="btn-nouvelle-seance">← Nouvelle séance</button>';
 
+    $('btn-ready-quiz').onclick = () => {
+      $('confidence-card').hidden = true;
+      $('quiz-section').hidden = false;
+      renderQCM(draft.questions);
+    };
+    $('btn-nouvelle-seance').onclick = () => { resetForm(); switchView('new'); };
+  }
+
+  function renderQCM(questions){
+    quizSelections = [];
+    $('attempt-badge').textContent = 'Tentative ' + (draft.attempts.length + 1) + ' / ' + MAX_TENTATIVES;
+    $('final-section').innerHTML = '';
+    $('error-correction').hidden = true;
+    $('btn-corriger').hidden = false;
+    $('btn-corriger').disabled = false;
+    $('btn-corriger').textContent = 'Corriger mes réponses';
+    $('btn-corriger').onclick = corriger;
+
     const list = $('quiz-list');
-    const micOn = speechSupported();
-    draft.questions.forEach((q, i) => {
+    list.innerHTML = '';
+    questions.forEach((q, i) => {
       const item = document.createElement('div');
       item.className = 'quiz-item';
+      const optsHtml = (q.options || []).map((opt, oi) =>
+        '<button type="button" class="qcm-option" data-qi="' + i + '" data-oi="' + oi + '">' + escapeHtml(opt) + '</button>'
+      ).join('');
       item.innerHTML =
-        '<div class="q"><span class="qnum">' + (i+1) + '.</span>' + escapeHtml(q) + '</div>' +
-        '<div class="answer-wrap">' +
-          '<textarea data-qi="' + i + '" placeholder="Ta réponse..." rows="2"></textarea>' +
-          (micOn ? '<button type="button" class="mic-btn" data-qi="' + i + '" title="Répondre à l\'oral">🎤</button>' : '') +
-        '</div>' +
-        (micOn ? '<div class="mic-hint" data-mic-hint="' + i + '" hidden></div>' : '') +
+        '<div class="q"><span class="qnum">' + (i+1) + '.</span>' + escapeHtml(q.question || '') + '</div>' +
+        '<div class="qcm-options" data-qi="' + i + '">' + optsHtml + '</div>' +
         '<div class="correction-slot"></div>';
       list.appendChild(item);
     });
 
-    if (micOn) {
-      list.querySelectorAll('.mic-btn').forEach(setupMic);
-    }
-
-    $('btn-corriger').onclick = corriger;
-    $('btn-nouvelle-seance').onclick = () => { resetForm(); switchView('new'); };
-  }
-
-  function speechSupported(){
-    return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-  }
-
-  function setupMic(btn){
-    const qi = btn.dataset.qi;
-    const textarea = document.querySelector('#quiz-list textarea[data-qi="' + qi + '"]');
-    const hint = document.querySelector('[data-mic-hint="' + qi + '"]');
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition = null;
-    let listening = false;
-
-    btn.addEventListener('click', () => {
-      if (listening) { recognition && recognition.stop(); return; }
-
-      recognition = new SR();
-      recognition.lang = 'fr-FR';
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-
-      recognition.onstart = () => {
-        listening = true;
-        btn.classList.add('listening');
-        btn.textContent = '⏺';
-        if (hint) { hint.hidden = false; hint.textContent = 'Je t\'écoute...'; }
-      };
-      recognition.onresult = (e) => {
-        const transcript = e.results[0][0].transcript;
-        textarea.value = (textarea.value.trim() ? textarea.value.trim() + ' ' : '') + transcript;
-        textarea.dispatchEvent(new Event('input'));
-        if (hint) hint.hidden = true;
-      };
-      recognition.onerror = (e) => {
-        if (hint) {
-          hint.hidden = false;
-          hint.textContent = e.error === 'not-allowed' ? "Micro refusé — autorise-le dans les réglages du navigateur." : "Je n'ai rien entendu, réessaie.";
-        }
-      };
-      recognition.onend = () => {
-        listening = false;
-        btn.classList.remove('listening');
-        btn.textContent = '🎤';
-      };
-      recognition.start();
+    list.querySelectorAll('.qcm-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const qi = Number(btn.dataset.qi), oi = Number(btn.dataset.oi);
+        quizSelections[qi] = oi;
+        list.querySelectorAll('.qcm-options[data-qi="' + qi + '"] .qcm-option').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+      });
     });
   }
 
   async function corriger(){
-    const textareas = document.querySelectorAll('#quiz-list textarea');
-    draft.answers = Array.from(textareas).map(t => t.value.trim());
-    if (draft.answers.some(a => !a)) {
+    if (quizSelections.length !== draft.questions.length || quizSelections.some(s => s === undefined)) {
       $('error-correction').hidden = false;
       $('error-correction').textContent = 'Réponds à toutes les questions avant de corriger.';
       return;
     }
     $('error-correction').hidden = true;
-    $('loading-correction').hidden = false;
-    $('btn-corriger').disabled = true;
 
-    try {
-      const data = await callFn('teen-ai', {
-        action: 'corriger',
-        resume: draft.resume, reexplication: draft.reexplication,
-        questions: draft.questions, answers: draft.answers
+    const questions = draft.questions;
+    let score = 0;
+    questions.forEach((q, i) => {
+      const isCorrect = quizSelections[i] === q.correct_index;
+      if (isCorrect) score++;
+      const optButtons = document.querySelectorAll('.qcm-options[data-qi="' + i + '"] .qcm-option');
+      optButtons.forEach((b, oi) => {
+        b.disabled = true;
+        if (oi === q.correct_index) b.classList.add('correct');
+        else if (oi === quizSelections[i]) b.classList.add('wrong');
       });
-      draft.corrections = Array.isArray(data.corrections) ? data.corrections : [];
-      draft.score = typeof data.score === 'number' ? data.score : null;
-      draft.total = draft.questions.length;
-      draft.encouragement = data.encouragement || '';
-      renderCorrections();
-    } catch(e) {
-      $('error-correction').hidden = false;
-      $('error-correction').textContent = copyForFnError(e.code);
-    } finally {
-      $('loading-correction').hidden = true;
-      $('btn-corriger').disabled = false;
-    }
-  }
-
-  function renderCorrections(){
-    const slots = document.querySelectorAll('#quiz-list .correction-slot');
-    draft.corrections.forEach((c, i) => {
-      if (!slots[i]) return;
-      const niveau = ['correct','partiel','a_revoir'].includes(c.niveau) ? c.niveau : 'partiel';
-      const badge = niveau === 'correct' ? '✓' : (niveau === 'partiel' ? '~' : '✗');
-      slots[i].innerHTML = '<div class="correction ' + niveau + '"><span class="badge">' + badge + '</span><span class="txt">' + escapeHtml(c.commentaire || '') + '</span></div>';
+      const slot = document.querySelectorAll('#quiz-list .correction-slot')[i];
+      const niveau = isCorrect ? 'correct' : 'a_revoir';
+      const badge = isCorrect ? '✓' : '✗';
+      slot.innerHTML = '<div class="correction ' + niveau + '"><span class="badge">' + badge + '</span><span class="txt">' + escapeHtml(q.explication || '') + '</span></div>';
     });
-    document.querySelectorAll('#quiz-list textarea').forEach(t => t.disabled = true);
+
+    draft.attempts.push({ questions, selections: quizSelections.slice(), score, total: questions.length });
+    $('btn-corriger').hidden = true;
 
     const card = $('quiz-card');
     const scoreBanner = document.createElement('div');
     scoreBanner.className = 'score-banner';
-    scoreBanner.innerHTML = '<div class="num">' + draft.score + ' / ' + draft.total + '</div><div class="enc">' + escapeHtml(draft.encouragement) + '</div>';
+    scoreBanner.innerHTML = '<div class="num">' + score + ' / ' + questions.length + '</div>';
     card.insertBefore(scoreBanner, card.querySelector('h3'));
-    $('btn-corriger').hidden = true;
 
     const actions = document.createElement('div');
     actions.className = 'actions-row';
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'btn';
-    saveBtn.textContent = 'Enregistrer cette séance';
-    saveBtn.onclick = saveSession;
-    actions.appendChild(saveBtn);
+    if (draft.attempts.length < MAX_TENTATIVES && score < questions.length) {
+      const retryBtn = document.createElement('button');
+      retryBtn.className = 'btn secondary';
+      retryBtn.textContent = 'Recommencer le quiz';
+      retryBtn.onclick = recommencerQuiz;
+      actions.appendChild(retryBtn);
+    }
+    const finishBtn = document.createElement('button');
+    finishBtn.className = 'btn';
+    finishBtn.textContent = 'Terminer la séance';
+    finishBtn.onclick = terminerSeance;
+    actions.appendChild(finishBtn);
     card.appendChild(actions);
   }
 
+  async function recommencerQuiz(){
+    const card = $('quiz-card');
+    card.querySelector('.score-banner')?.remove();
+    card.querySelector('.actions-row')?.remove();
+    const loading = $('loading-correction');
+    loading.hidden = false;
+    try {
+      const previousQuestions = draft.attempts.flatMap(a => a.questions.map(q => q.question));
+      const data = await callFn('teen-ai', {
+        action: 'quiz',
+        resume: draft.resume, reexplication: draft.reexplication,
+        niveau: currentNiveau(), previousQuestions
+      });
+      draft.questions = Array.isArray(data.questions) ? data.questions.slice(0,6) : draft.questions;
+      renderQCM(draft.questions);
+    } catch(e) {
+      $('error-correction').hidden = false;
+      $('error-correction').textContent = copyForFnError(e.code);
+    } finally {
+      loading.hidden = true;
+    }
+  }
+
+  async function terminerSeance(){
+    const card = $('quiz-card');
+    card.querySelector('.actions-row')?.remove();
+    const finalBox = $('final-section');
+    finalBox.innerHTML = '<div class="loading"><span class="spinner"></span> 67 TEEN prépare la synthèse...</div>';
+
+    const last = draft.attempts[draft.attempts.length - 1];
+    const missed = [];
+    last.questions.forEach((q, i) => {
+      if (last.selections[i] !== q.correct_index) {
+        missed.push({
+          question: q.question,
+          reponseEleve: (q.options || [])[last.selections[i]] || '(pas de réponse)',
+          bonneReponse: (q.options || [])[q.correct_index]
+        });
+      }
+    });
+
+    let synthese, encouragement;
+    if (!missed.length) {
+      synthese = 'Score parfait sur cette tentative — tu maîtrises bien ce cours.';
+      encouragement = 'Continue comme ça !';
+    } else {
+      try {
+        const data = await callFn('teen-ai', {
+          action: 'synthese',
+          resume: draft.resume, reexplication: draft.reexplication,
+          niveau: currentNiveau(), missed
+        });
+        synthese = data.synthese || '';
+        encouragement = data.encouragement || '';
+      } catch(e) {
+        synthese = '';
+        encouragement = '';
+      }
+    }
+
+    draft.syntheseFinale = synthese;
+
+    finalBox.innerHTML =
+      (synthese ? '<div class="card"><h3>Ce qu’il faut retravailler</h3><p>' + escapeHtml(synthese) + '</p>' + (encouragement ? '<p class="annotation">' + escapeHtml(encouragement) + '</p>' : '') + '</div>' : '') +
+      '<button class="btn" id="btn-save-session">Enregistrer cette séance</button>';
+    $('btn-save-session').onclick = saveSession;
+  }
+
   async function saveSession(){
-    const btn = document.querySelector('.actions-row .btn');
+    const btn = $('btn-save-session');
     btn.disabled = true;
     btn.textContent = 'Enregistrement...';
+    const last = draft.attempts[draft.attempts.length - 1];
     try {
       const profile = getProfile();
       const { error } = await sb.from('teen_seances').insert({
@@ -827,11 +882,16 @@
         commentaire: draft.commentaire || '',
         resume: draft.resume,
         reexplication: draft.reexplication,
-        questions: draft.questions,
-        answers: draft.answers,
-        corrections: draft.corrections,
-        score: draft.score,
-        total: draft.total
+        questions: last.questions,
+        answers: last.selections.map((si, i) => (last.questions[i].options || [])[si] || null),
+        corrections: last.questions.map((q, i) => ({
+          niveau: last.selections[i] === q.correct_index ? 'correct' : 'a_revoir',
+          commentaire: q.explication || ''
+        })),
+        score: last.score,
+        total: last.total,
+        tentatives: draft.attempts.length,
+        synthese_finale: draft.syntheseFinale || null
       });
       if (error) throw error;
       btn.textContent = 'Séance enregistrée ✓';
@@ -982,20 +1042,72 @@
 
   async function renderParentDashboard(v){
     v.innerHTML =
-      '<div class="parent-header"><h2>Bulletins de notes</h2>' +
+      '<div class="parent-header"><h2>Espace parent</h2>' +
         '<button class="link-btn" id="btn-change-pin">Code parent</button>' +
       '</div>' +
-      '<p class="hint">Photographie le bulletin si l\'école ne propose pas de connexion automatique.</p>' +
-      '<div class="dropzone" id="bulletin-dropzone"><span class="icon">🧾</span><span class="label">Photographier un bulletin</span> <span class="sub">toutes les notes seront relues avant d\'être enregistrées</span>' +
-      '<input type="file" accept="image/*" capture="environment" id="bulletin-input"></div>' +
-      '<div id="bulletin-loading" class="loading" hidden><span class="spinner"></span> 67 TEEN lit le bulletin...</div>' +
-      '<div id="bulletin-error" class="notice error" hidden></div>' +
-      '<div id="bulletin-review"></div>' +
-      '<div id="bulletins-list"></div>';
+      '<div class="chips" style="margin-bottom:20px;">' +
+        '<button class="chip selected" id="ptab-bulletins">Bulletins</button>' +
+        '<button class="chip" id="ptab-seances">Séances</button>' +
+      '</div>' +
+      '<div id="parent-bulletins-view">' +
+        '<p class="hint">Photographie le bulletin si l\'école ne propose pas de connexion automatique.</p>' +
+        '<div class="dropzone" id="bulletin-dropzone"><span class="icon">🧾</span><span class="label">Photographier un bulletin</span> <span class="sub">toutes les notes seront relues avant d\'être enregistrées</span>' +
+        '<input type="file" accept="image/*" capture="environment" id="bulletin-input"></div>' +
+        '<div id="bulletin-loading" class="loading" hidden><span class="spinner"></span> 67 TEEN lit le bulletin...</div>' +
+        '<div id="bulletin-error" class="notice error" hidden></div>' +
+        '<div id="bulletin-review"></div>' +
+        '<div id="bulletins-list"></div>' +
+      '</div>' +
+      '<div id="parent-seances-view" hidden>' +
+        '<p class="hint">Les séances de révision de chaque enfant, avec leurs scores.</p>' +
+        '<div id="parent-seances-list"></div>' +
+      '</div>';
 
     $('btn-change-pin').onclick = renderChangePin;
     $('bulletin-input').addEventListener('change', handleBulletinPhoto);
+    $('ptab-bulletins').onclick = () => {
+      $('ptab-bulletins').classList.add('selected');
+      $('ptab-seances').classList.remove('selected');
+      $('parent-bulletins-view').hidden = false;
+      $('parent-seances-view').hidden = true;
+    };
+    $('ptab-seances').onclick = () => {
+      $('ptab-seances').classList.add('selected');
+      $('ptab-bulletins').classList.remove('selected');
+      $('parent-seances-view').hidden = false;
+      $('parent-bulletins-view').hidden = true;
+      loadParentSeances();
+    };
     loadBulletins();
+  }
+
+  async function loadParentSeances(){
+    const list = $('parent-seances-list');
+    list.innerHTML = '<div class="loading"><span class="spinner"></span> chargement...</div>';
+    try {
+      const { data: seances, error } = await sb.from('teen_seances').select('*').order('created_at', { ascending: false }).limit(50);
+      if (error) throw error;
+      if (!seances || !seances.length) {
+        list.innerHTML = '<div class="empty-state"><span class="icon">📓</span>Aucune séance enregistrée pour l\'instant.</div>';
+        return;
+      }
+      list.innerHTML = seances.map(s => {
+        const d = new Date(s.created_at);
+        const dateStr = isNaN(d) ? '' : d.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
+        const scoreStr = (typeof s.score === 'number' && typeof s.total === 'number') ? (s.score + '/' + s.total) : '—';
+        const tentStr = s.tentatives ? ' · ' + s.tentatives + ' tentative' + (s.tentatives > 1 ? 's' : '') : '';
+        return '<div class="seance">' +
+          '<div class="seance-top"><span class="matiere">' + escapeHtml(s.eleve || 'Élève') + ' — ' + escapeHtml(s.matiere || 'Matière') + '</span><span class="date">' + dateStr + '</span></div>' +
+          '<div class="seance-top"><p class="seance-excerpt">' + escapeHtml(s.resume || '') + '</p><span class="seance-score">' + scoreStr + tentStr + '</span></div>' +
+          (s.synthese_finale ? '<div class="seance-full" hidden><strong>À retravailler :</strong> ' + escapeHtml(s.synthese_finale) + '</div>' : '') +
+          '</div>';
+      }).join('');
+      list.querySelectorAll('.seance').forEach(el => {
+        el.addEventListener('click', () => { const full = el.querySelector('.seance-full'); if (full) full.hidden = !full.hidden; });
+      });
+    } catch(e) {
+      list.innerHTML = '<div class="notice error">Impossible de charger les séances.</div>';
+    }
   }
 
   function renderChangePin(){
