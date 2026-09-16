@@ -105,7 +105,7 @@
     *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
   }
 
-  header{position:sticky; top:0; z-index:10; background:var(--paper); border-bottom:1px solid var(--line); padding:16px 20px 0;}
+  header{position:sticky; top:0; z-index:10; background:color-mix(in srgb, var(--paper) 72%, transparent); -webkit-backdrop-filter:saturate(180%) blur(18px); backdrop-filter:saturate(180%) blur(18px); border-bottom:1px solid color-mix(in srgb, var(--line) 70%, transparent); padding:16px 20px 0;}
   .brand{display:flex; align-items:baseline; gap:10px; max-width:640px; margin:0 auto;}
   .brand .mark{font-family:var(--font-display); font-weight:700; font-size:1.5rem; letter-spacing:-.01em;}
   .brand .mark em{font-style:normal; color:var(--accent);}
@@ -551,9 +551,9 @@
           '<h2>Ce qui change avec 67 TEEN</h2>' +
           '<div class="landing-features">' +
             '<div class="landing-feature scroll-reveal"><span class="icon">🎯</span><span>Un quiz exigeant, pas un questionnaire qu’on réussit sans comprendre.</span></div>' +
-            '<div class="landing-feature scroll-reveal"><span class="icon">🧾</span><span>Le suivi des bulletins de notes, en attendant une connexion directe à l’école.</span></div>' +
-            '<div class="landing-feature scroll-reveal"><span class="icon">🔒</span><span>Un espace parent séparé, avec les séances et les scores de chaque enfant.</span></div>' +
-            '<div class="landing-feature scroll-reveal"><span class="icon">👤</span><span>Un historique propre à chaque enfant — personne ne voit les séances des autres.</span></div>' +
+            '<div class="landing-feature scroll-reveal"><span class="icon">📊</span><span>Le suivi des bulletins de notes, en attendant une connexion directe à l’école.</span></div>' +
+            '<div class="landing-feature scroll-reveal"><span class="icon">🔑</span><span>Un espace parent séparé, avec les séances et les scores de chaque enfant.</span></div>' +
+            '<div class="landing-feature scroll-reveal"><span class="icon">🗂️</span><span>Un historique propre à chaque enfant — personne ne voit les séances des autres.</span></div>' +
           '</div>' +
         '</div>' +
 
@@ -562,9 +562,9 @@
             '<h2>Pensé pour rassurer les parents</h2>' +
             '<div class="landing-features">' +
               '<div class="landing-feature scroll-reveal"><span class="icon">🎯</span><span><strong>Uniquement les devoirs.</strong> Pas de chat libre, pas de réseaux, pas de sujets hors-sujet — l’IA ne répond qu’aux demandes de révision.</span></div>' +
-              '<div class="landing-feature scroll-reveal"><span class="icon">👀</span><span><strong>Tu vois tout.</strong> L’espace parent, protégé par ton propre code, montre les séances, les scores et les bulletins de chaque enfant.</span></div>' +
-              '<div class="landing-feature scroll-reveal"><span class="icon">🔐</span><span><strong>Rien n’est revendu.</strong> Pas de publicité, aucune donnée partagée avec des tiers.</span></div>' +
-              '<div class="landing-feature scroll-reveal"><span class="icon">✋</span><span><strong>Tu gardes la main.</strong> C’est toi qui gères l’abonnement, résiliable à tout moment.</span></div>' +
+              '<div class="landing-feature scroll-reveal"><span class="icon">🔍</span><span><strong>Tu vois tout.</strong> L’espace parent, protégé par ton propre code, montre les séances, les scores et les bulletins de chaque enfant.</span></div>' +
+              '<div class="landing-feature scroll-reveal"><span class="icon">🛡️</span><span><strong>Rien n’est revendu.</strong> Pas de publicité, aucune donnée partagée avec des tiers.</span></div>' +
+              '<div class="landing-feature scroll-reveal"><span class="icon">🤝</span><span><strong>Tu gardes la main.</strong> C’est toi qui gères l’abonnement, résiliable à tout moment.</span></div>' +
             '</div>' +
           '</div>' +
         '</div>' +
