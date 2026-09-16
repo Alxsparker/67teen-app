@@ -1649,6 +1649,13 @@
           '<button class="btn" id="famille-add-btn" style="margin-top:10px;">Ajouter</button>' +
           '<div class="notice error" id="famille-error" hidden></div>' +
           '<div class="notice" id="famille-success" hidden></div>' +
+          '<div id="famille-invite-box" hidden style="margin-top:10px;">' +
+            '<p class="hint" style="margin:0 0 6px;">Envoie-lui ce lien par SMS, WhatsApp ou autre :</p>' +
+            '<div style="display:flex; gap:8px;">' +
+              '<input type="text" class="gate-input" id="famille-invite-link" readonly style="flex:1;">' +
+              '<button class="btn secondary" id="famille-copy-btn" style="width:auto; white-space:nowrap;">Copier</button>' +
+            '</div>' +
+          '</div>' +
         '</div>' +
         '<div id="famille-list" style="margin-top:18px;"></div>' +
       '</div>';
@@ -1688,6 +1695,19 @@
     $('ptab-seances').onclick = () => { showPtab('seances'); loadParentSeances(); };
     $('ptab-famille').onclick = () => { showPtab('famille'); loadFamilleMembers(); };
     $('famille-add-btn').onclick = addFamilleMember;
+    $('famille-copy-btn').onclick = async () => {
+      const link = $('famille-invite-link').value;
+      const btn = $('famille-copy-btn');
+      try {
+        await navigator.clipboard.writeText(link);
+      } catch(e) {
+        $('famille-invite-link').select();
+        document.execCommand('copy');
+      }
+      const original = btn.textContent;
+      btn.textContent = 'Copié !';
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    };
 
     loadParentSeances();
   }
@@ -1722,15 +1742,22 @@
     const email = $('famille-email-input').value.trim();
     $('famille-error').hidden = true;
     $('famille-success').hidden = true;
+    $('famille-invite-box').hidden = true;
     if (!EMAIL_RE.test(email)) { $('famille-error').hidden = false; $('famille-error').textContent = 'Entrez une adresse email valide.'; return; }
     const btn = $('famille-add-btn');
     btn.disabled = true; btn.textContent = 'Ajout...';
     const sessionToken = localStorage.getItem(SESSION_KEY);
     try {
-      await callFn('teen-auth', { action: 'add_family_member', sessionToken, memberEmail: email });
+      const res = await callFn('teen-auth', { action: 'add_family_member', sessionToken, memberEmail: email });
       $('famille-email-input').value = '';
       $('famille-success').hidden = false;
-      $('famille-success').textContent = 'Ajouté ! Un email de connexion vient de lui être envoyé.';
+      $('famille-success').textContent = res.emailSent
+        ? 'Ajouté ! Un email de connexion vient de lui être envoyé.'
+        : "Ajouté ! L'email n'a pas pu être envoyé — partage-lui plutôt ce lien :";
+      if (res.link) {
+        $('famille-invite-box').hidden = false;
+        $('famille-invite-link').value = res.link;
+      }
       loadFamilleMembers();
     } catch(e) {
       $('famille-error').hidden = false;
