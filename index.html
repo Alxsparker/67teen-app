@@ -165,10 +165,8 @@
   .landing-phone .phone-card.in > *:nth-child(1){transition-delay:.05s;}
   .landing-phone .phone-card.in > *:nth-child(2){transition-delay:.24s;}
   .landing-phone .phone-card.in > *:nth-child(3){transition-delay:.44s;}
-  .landing-phone .frac{display:inline-flex; flex-direction:column; text-align:center; vertical-align:middle; font-size:.92em; line-height:1.1; margin:0 2px;}
-  .landing-phone .frac span{border-bottom:1.4px solid currentColor; padding:0 3px;}
-  .landing-phone .frac em{font-style:normal; padding-top:1px;}
-
+  .landing-phone .step-part{opacity:0; display:inline-block; margin-right:.35em; transition:opacity .35s ease;}
+  .landing-phone .step-part.in{opacity:1;}
   .landing-tick{flex:none; width:24px; height:20px; margin-top:2px;}
   .landing-tick path{fill:none; stroke:var(--accent); stroke-width:3.4; stroke-linecap:round; stroke-linejoin:round;}
   .landing-checklist{margin-top:22px; display:flex; flex-wrap:wrap; gap:14px;}
@@ -669,8 +667,21 @@
 
     const phoneCard = root.querySelector('.landing-phone .phone-card');
     if (phoneCard) {
+      const steps = Array.from(phoneCard.querySelectorAll('.step-part'));
+      let loopTimers = [];
+      const clearLoop = () => { loopTimers.forEach(t => clearTimeout(t)); loopTimers = []; };
+      const cycle = () => {
+        clearLoop();
+        phoneCard.classList.remove('in');
+        steps.forEach(s => s.classList.remove('in'));
+        loopTimers.push(setTimeout(() => phoneCard.classList.add('in'), 120));
+        steps.forEach((s, i) => {
+          loopTimers.push(setTimeout(() => s.classList.add('in'), 900 + i * 650));
+        });
+        loopTimers.push(setTimeout(cycle, 5200));
+      };
       const phoneIO = new IntersectionObserver((entries) => {
-        entries.forEach(e => { if (e.isIntersecting) { phoneCard.classList.add('in'); phoneIO.unobserve(phoneCard); } });
+        entries.forEach(e => { if (e.isIntersecting) cycle(); else clearLoop(); });
       }, { threshold: .4 });
       phoneIO.observe(phoneCard);
     }
@@ -681,7 +692,7 @@
       const priceIO = new IntersectionObserver((entries) => {
         entries.forEach(e => {
           if (!e.isIntersecting) return;
-          let start = null; const dur = 900, target = 6.99;
+          let start = null; const dur = 900, target = 6.70;
           function step(ts){
             if (!start) start = ts;
             const progress = Math.min((ts - start) / dur, 1);
@@ -765,7 +776,7 @@
                 '<div class="landing-phone-head">Maths · les fractions</div>' +
                 '<div class="phone-card rich-text">' +
                   '<p>Pour simplifier une fraction, on divise le numérateur et le dénominateur par le même nombre.</p>' +
-                  '<div class="callout callout-exemple"><span class="callout-label">💡 Exemple</span><p><span class="frac"><span>6</span><em>8</em></span> = <span class="frac"><span>6÷2</span><em>8÷2</em></span> = <span class="frac"><span>3</span><em>4</em></span></p></div>' +
+                  '<div class="callout callout-exemple"><span class="callout-label">💡 Exemple</span><p><span class="step-part">$\\frac{6}{8}$</span><span class="step-part">$= \\frac{6 \\div 2}{8 \\div 2}$</span><span class="step-part">$= \\frac{3}{4}$</span></p></div>' +
                   '<div class="callout callout-retenir"><span class="callout-label">📌 À retenir</span><p>on ne peut additionner deux fractions que si elles ont le même dénominateur.</p></div>' +
                 '</div>' +
               '</div>' +
@@ -813,6 +824,7 @@
 
     initScrollReveal();
     initLandingExtras();
+    renderMathIn($('app-gate'));
 
     $('gate-subscribe-btn').onclick = async () => {
       const email = $('gate-email').value.trim();
