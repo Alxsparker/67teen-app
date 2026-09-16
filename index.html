@@ -540,11 +540,12 @@
             '<span class="num-pop num-pop-2">7</span> ' +
             '<em class="hero-teen">TEEN</em>' +
           '</div>' +
-          '<p class="hero-sub">L’IA qui explique, qui challenge, et qui ne fait jamais le devoir à la place de ton ado.</p>' +
+          '<p class="hero-sub">L’IA qui explique, qui challenge, et qui ne fait jamais le devoir à la place de votre ado.</p>' +
         '</div>' +
 
         '<div class="landing-section scroll-reveal">' +
           '<h2>Comment ça marche</h2>' +
+          '<p class="hint" style="margin:-6px 0 18px;">Vous créez le compte, votre ado l’utilise.</p>' +
           '<ol class="landing-steps">' +
             '<li class="scroll-reveal"><span class="num">1</span><span>Il prend son cours en photo, ou colle le texte à réviser.</span></li>' +
             '<li class="scroll-reveal"><span class="num">2</span><span>67 TEEN résume simplement, réexplique en détail, puis le challenge avec un vrai quiz — pas des questions faciles.</span></li>' +
@@ -567,9 +568,9 @@
             '<h2>Pensé pour rassurer les parents</h2>' +
             '<div class="landing-features">' +
               '<div class="landing-feature scroll-reveal"><span class="icon">🎯</span><span><strong>Uniquement les devoirs.</strong> Pas de chat libre, pas de réseaux, pas de sujets hors-sujet — l’IA ne répond qu’aux demandes de révision.</span></div>' +
-              '<div class="landing-feature scroll-reveal"><span class="icon">🔍</span><span><strong>Tu vois tout.</strong> L’espace parent, protégé par ton propre code, montre les séances, les scores et les bulletins de chaque enfant.</span></div>' +
+              '<div class="landing-feature scroll-reveal"><span class="icon">🔍</span><span><strong>Vous voyez tout.</strong> L’espace parent, protégé par votre propre code, montre les séances, les scores et les bulletins de chaque enfant.</span></div>' +
               '<div class="landing-feature scroll-reveal"><span class="icon">🛡️</span><span><strong>Rien n’est revendu.</strong> Pas de publicité, aucune donnée partagée avec des tiers.</span></div>' +
-              '<div class="landing-feature scroll-reveal"><span class="icon">🤝</span><span><strong>Tu gardes la main.</strong> C’est toi qui gères l’abonnement, résiliable à tout moment.</span></div>' +
+              '<div class="landing-feature scroll-reveal"><span class="icon">🤝</span><span><strong>Vous gardez la main.</strong> C’est vous qui gérez l’abonnement, résiliable à tout moment.</span></div>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -584,7 +585,7 @@
 
         '<div class="card scroll-reveal" style="max-width:400px; margin:0 auto;">' +
           (message ? '<div class="notice">' + escapeHtml(message) + '</div>' : '') +
-          '<input type="email" class="gate-input" id="gate-email" placeholder="ton@email.fr" value="' + escapeHtml(defaultEmail || '') + '" style="margin-bottom:12px;">' +
+          '<input type="email" class="gate-input" id="gate-email" placeholder="votre@email.fr" value="' + escapeHtml(defaultEmail || '') + '" style="margin-bottom:12px;">' +
           '<button class="btn" id="gate-subscribe-btn">S’abonner — 6,99€/mois</button>' +
           '<button class="link-btn" id="gate-login-link" style="display:block; margin:14px auto 0;">J’ai déjà un compte</button>' +
           '<div class="notice error" id="gate-error" hidden></div>' +
@@ -678,7 +679,7 @@
       history.replaceState({}, '', window.location.pathname);
       try {
         await callFn('teen-auth', { action: 'request_link', email: checkoutEmail });
-        renderGateMessage('Merci pour ton abonnement 🎉', 'Vérifie ta boîte mail (' + checkoutEmail + ') pour te connecter.');
+        renderGateMessage('Merci pour votre abonnement 🎉', 'Vérifiez votre boîte mail (' + checkoutEmail + ') pour vous connecter.');
         return;
       } catch(e) {
         renderGateLanding(checkoutEmail, 'Paiement reçu, mais l’envoi du lien a échoué — réessaie de te connecter.');
@@ -1270,7 +1271,7 @@
         '<div id="parent-seances-list"></div>' +
       '</div>' +
       '<div id="parent-famille-view" hidden>' +
-        '<p class="hint">Ajoute l\'email de chaque enfant (jusqu\'à 3) pour qu\'il ait accès à 67 TEEN avec ton abonnement, sans payer en plus.</p>' +
+        '<p class="hint">Ajoutez l\'email de chaque enfant (jusqu\'à 3) pour qu\'il ait accès à 67 TEEN avec votre abonnement, sans payer en plus.</p>' +
         '<div id="famille-add-box">' +
           '<input type="email" class="gate-input" id="famille-email-input" placeholder="email-de-ton-enfant@exemple.fr">' +
           '<button class="btn" id="famille-add-btn" style="margin-top:10px;">Ajouter</button>' +
@@ -1329,7 +1330,7 @@
     const email = $('famille-email-input').value.trim();
     $('famille-error').hidden = true;
     $('famille-success').hidden = true;
-    if (!EMAIL_RE.test(email)) { $('famille-error').hidden = false; $('famille-error').textContent = 'Entre une adresse email valide.'; return; }
+    if (!EMAIL_RE.test(email)) { $('famille-error').hidden = false; $('famille-error').textContent = 'Entrez une adresse email valide.'; return; }
     const btn = $('famille-add-btn');
     btn.disabled = true; btn.textContent = 'Ajout...';
     const sessionToken = localStorage.getItem(SESSION_KEY);
@@ -1341,7 +1342,7 @@
       loadFamilleMembers();
     } catch(e) {
       $('famille-error').hidden = false;
-      $('famille-error').textContent = e.code === 'not_active_subscriber' ? "Ton abonnement n'est pas actif."
+      $('famille-error').textContent = e.code === 'not_active_subscriber' ? "Votre abonnement n'est pas actif."
         : e.code === 'family_limit_reached' ? "Limite atteinte — 3 ados maximum par famille."
         : "Impossible d'ajouter cet email — réessaie.";
     } finally {
