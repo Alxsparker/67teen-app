@@ -9,6 +9,9 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="theme-color" content="#E15A2E">
 <meta name="apple-mobile-web-app-title" content="67 TEEN">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=Caveat:wght@500;600;700&display=swap');
 
@@ -182,6 +185,16 @@
   .result-photo img{width:100%; height:100%; object-fit:cover; display:block;}
   .matiere-tag{display:inline-block; background:var(--accent-soft); color:var(--accent-strong); font-weight:700; font-size:.78rem; letter-spacing:.03em; text-transform:uppercase; padding:5px 11px; border-radius:99px; margin-bottom:14px;}
   .card{background:var(--paper-raised); border:1px solid var(--line); border-radius:14px; padding:20px 20px 18px; margin-bottom:18px;}
+  .rich-text p{margin:0 0 14px; line-height:1.6;}
+  .rich-text p:last-child{margin-bottom:0;}
+  .rich-text .callout{border-radius:10px; padding:12px 14px; margin:14px 0;}
+  .rich-text .callout:last-child{margin-bottom:0;}
+  .rich-text .callout p{margin:0;}
+  .rich-text .callout-label{display:block; font-weight:700; font-size:.78rem; text-transform:uppercase; letter-spacing:.03em; margin-bottom:5px;}
+  .rich-text .callout-exemple{background:var(--accent-soft); border-left:3px solid var(--accent);}
+  .rich-text .callout-exemple .callout-label{color:var(--accent-strong);}
+  .rich-text .callout-retenir{background:var(--good-soft); border-left:3px solid var(--good);}
+  .rich-text .callout-retenir .callout-label{color:var(--good);}
   .card h3{font-family:var(--font-body); font-weight:700; font-size:.78rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 10px;}
   .card p{margin:0; font-size:.97rem;}
 
@@ -421,6 +434,37 @@
     const d = document.createElement('div');
     d.textContent = str == null ? '' : String(str);
     return d.innerHTML;
+  }
+
+  // Découpe le texte de l'IA en paragraphes aérés, et met en valeur
+  // les passages "Exemple :" / "À retenir :" dans des encadrés colorés.
+  function renderRichText(str){
+    if (!str) return '';
+    const paragraphs = String(str).split(/\n+/).map(p => p.trim()).filter(Boolean);
+    return paragraphs.map(p => {
+      const exemple = /^exemple\s*:/i.exec(p);
+      const retenir = /^(à|a) retenir\s*:/i.exec(p);
+      if (exemple) {
+        return '<div class="callout callout-exemple"><span class="callout-label">💡 Exemple</span><p>' + escapeHtml(p.slice(exemple[0].length).trim()) + '</p></div>';
+      }
+      if (retenir) {
+        return '<div class="callout callout-retenir"><span class="callout-label">📌 À retenir</span><p>' + escapeHtml(p.slice(retenir[0].length).trim()) + '</p></div>';
+      }
+      return '<p>' + escapeHtml(p) + '</p>';
+    }).join('');
+  }
+
+  function renderMathIn(el){
+    if (!el || typeof renderMathInElement !== 'function') return;
+    try {
+      renderMathInElement(el, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true },
+          { left: '$', right: '$', display: false }
+        ],
+        throwOnError: false
+      });
+    } catch(e) { /* pas grave, le texte brut reste lisible */ }
   }
 
   function copyForFnError(code){
@@ -861,6 +905,7 @@
         reexplication: data.reexplication || '',
         questions: Array.isArray(data.questions) ? data.questions.slice(0,6) : [],
         attempts: [],
+        clarifications: [],
         commentaire,
         moyenneDeclaree: (moyenneActuelle != null && !isNaN(moyenneActuelle)) ? moyenneActuelle : null
       };
@@ -885,16 +930,35 @@
     return null;
   }
 
+  function renderClarifications(){
+    const box = $('clarifications-list');
+    if (!box) return;
+    box.innerHTML = draft.clarifications.map(c =>
+      '<div class="card" style="background:var(--paper-sunken); margin-bottom:12px;">' +
+        '<p style="margin:0 0 8px;font-weight:700;">' + escapeHtml(c.question) + '</p>' +
+        '<div class="rich-text">' + renderRichText(c.reponse) + '</div>' +
+      '</div>'
+    ).join('');
+    renderMathIn(box);
+  }
+
   function renderResult(){
     const v = $('view-result');
     let photoHtml = photoPreviewUrl ? '<div class="result-photo"><img src="' + photoPreviewUrl + '" alt="Photo du cours"></div>' : '';
     v.innerHTML =
       photoHtml +
       '<span class="matiere-tag reveal">' + escapeHtml(draft.matiere || 'Matière') + '</span>' +
-      '<div class="card reveal reveal-1"><h3>Résumé</h3><p>' + escapeHtml(draft.resume) + '</p></div>' +
-      '<div class="card reveal reveal-2"><h3>Ré-explication</h3><p>' + escapeHtml(draft.reexplication) + '</p></div>' +
+      '<div class="card reveal reveal-1"><h3>Résumé</h3><div class="rich-text">' + renderRichText(draft.resume) + '</div></div>' +
+      '<div class="card reveal reveal-2"><h3>Ré-explication</h3><div class="rich-text">' + renderRichText(draft.reexplication) + '</div></div>' +
       '<div class="card confidence-box reveal reveal-3" id="confidence-card">' +
-        '<p style="margin:0 0 14px;">Relis si besoin — pas de pression. Quand tu te sens prêt :</p>' +
+        '<p style="margin:0 0 14px;">Relis si besoin — pas de pression. Une question avant de te lancer ?</p>' +
+        '<div id="clarifications-list"></div>' +
+        '<textarea id="question-input" rows="2" placeholder="Ex : « Je n\'ai pas compris pourquoi... »" style="margin-bottom:10px;"></textarea>' +
+        '<div class="actions-row" style="margin-bottom:14px;">' +
+          '<button class="btn secondary" id="btn-ask-question">Demander une précision</button>' +
+        '</div>' +
+        '<div class="loading" id="loading-question" hidden><span class="spinner"></span> 67 TEEN réfléchit...</div>' +
+        '<div class="notice error" id="error-question" hidden></div>' +
         '<button class="btn" id="btn-ready-quiz">Je pense avoir compris, on passe au quiz</button>' +
       '</div>' +
       '<div id="quiz-section" hidden>' +
@@ -910,10 +974,40 @@
       '</div>' +
       '<button class="btn ghost" id="btn-nouvelle-seance">← Nouvelle séance</button>';
 
+    renderMathIn(v);
+    renderClarifications();
+
     $('btn-ready-quiz').onclick = () => {
       $('confidence-card').hidden = true;
       $('quiz-section').hidden = false;
       renderQCM(draft.questions);
+    };
+
+    $('btn-ask-question').onclick = async () => {
+      const question = $('question-input').value.trim();
+      $('error-question').hidden = true;
+      if (!question) return;
+      const btn = $('btn-ask-question');
+      btn.disabled = true;
+      $('loading-question').hidden = false;
+      try {
+        const data = await callFn('teen-ai', {
+          action: 'question',
+          resume: draft.resume,
+          reexplication: draft.reexplication,
+          niveau: currentNiveau(),
+          question
+        });
+        draft.clarifications.push({ question, reponse: data.reponse || '' });
+        $('question-input').value = '';
+        renderClarifications();
+      } catch(e) {
+        $('error-question').hidden = false;
+        $('error-question').textContent = "Impossible de répondre — réessaie.";
+      } finally {
+        btn.disabled = false;
+        $('loading-question').hidden = true;
+      }
     };
     $('btn-nouvelle-seance').onclick = () => { resetForm(); switchView('new'); };
   }
@@ -1068,8 +1162,9 @@
     draft.syntheseFinale = synthese;
 
     finalBox.innerHTML =
-      (synthese ? '<div class="card reveal"><h3>Ce qu’il faut retravailler</h3><p>' + escapeHtml(synthese) + '</p>' + (encouragement ? '<p class="annotation">' + escapeHtml(encouragement) + '</p>' : '') + '</div>' : '') +
+      (synthese ? '<div class="card reveal"><h3>Ce qu’il faut retravailler</h3><div class="rich-text">' + renderRichText(synthese) + '</div>' + (encouragement ? '<p class="annotation">' + escapeHtml(encouragement) + '</p>' : '') + '</div>' : '') +
       '<button class="btn reveal" id="btn-save-session">Enregistrer cette séance</button>';
+    renderMathIn(finalBox);
     $('btn-save-session').onclick = saveSession;
   }
 
