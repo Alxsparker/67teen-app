@@ -13,7 +13,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;600;700&family=Caveat:wght@500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,600;1,9..144,700&family=Karla:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap');
 
   :root{
     --paper:#F4F5F0;
@@ -31,6 +31,8 @@
     --warn-soft:#F5E7CE;
     --bad:#C1432F;
     --bad-soft:#F7DED9;
+    --marker:#F4CB3A;
+    --marker-ink:#3A2E05;
     --font-display:'Fraunces', Georgia, 'Times New Roman', serif;
     --font-body:'Karla', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-hand:'Caveat', cursive;
@@ -42,6 +44,7 @@
       --accent:#FF7A4D; --accent-strong:#FF9569; --accent-soft:#3A2A1E;
       --good:#5FC79C; --good-soft:#1E332B; --warn:#E3B15C; --warn-soft:#3A2F19;
       --bad:#E67560; --bad-soft:#3A211C;
+      --marker:#7A6321; --marker-ink:#F4E6B8;
     }
   }
   :root[data-theme="dark"]{
@@ -50,6 +53,7 @@
     --accent:#FF7A4D; --accent-strong:#FF9569; --accent-soft:#3A2A1E;
     --good:#5FC79C; --good-soft:#1E332B; --warn:#E3B15C; --warn-soft:#3A2F19;
     --bad:#E67560; --bad-soft:#3A211C;
+    --marker:#7A6321; --marker-ink:#F4E6B8;
   }
   *{box-sizing:border-box;}
   html,body{margin:0; background:var(--paper); color:var(--ink);}
@@ -97,13 +101,6 @@
   /* ---- apparition progressive au scroll ---- */
   .scroll-reveal { opacity: 0; transform: translateY(28px) scale(.97); transition: opacity .7s cubic-bezier(.16,.8,.24,1), transform .7s cubic-bezier(.16,.8,.24,1); }
   .scroll-reveal.in-view { opacity: 1; transform: translateY(0) scale(1); }
-  .landing-steps li:nth-child(1){transition-delay:0s;}
-  .landing-steps li:nth-child(2){transition-delay:.12s;}
-  .landing-steps li:nth-child(3){transition-delay:.24s;}
-  .landing-features .landing-feature:nth-child(1){transition-delay:0s;}
-  .landing-features .landing-feature:nth-child(2){transition-delay:.09s;}
-  .landing-features .landing-feature:nth-child(3){transition-delay:.18s;}
-  .landing-features .landing-feature:nth-child(4){transition-delay:.27s;}
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
   }
@@ -117,25 +114,81 @@
   .profile-gate{position:fixed; inset:0; background:var(--paper); z-index:50; overflow-y:auto; padding:20px;}
   .profile-gate:not([hidden]) { animation: riseIn .22s ease both; }
 
-  .landing{max-width:620px; margin:0 auto; padding:20px 0 40px; text-align:left;}
-  .landing-hero{text-align:center; margin-bottom:44px;}
-  .landing-hero .mark{font-family:var(--font-display); font-weight:700; font-size:clamp(3.2rem, 17vw, 6.2rem); letter-spacing:-.01em; line-height:1;}
+  .landing{max-width:640px; margin:0 auto; padding:6px 0 36px; text-align:left; position:relative;}
+
+  .landing-nav{display:flex; align-items:center; justify-content:space-between; padding:8px 2px 18px; position:sticky; top:0; z-index:5; background:color-mix(in srgb, var(--paper) 85%, transparent); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);}
+  .landing-nav .mark{font-family:var(--font-display); font-weight:700; font-size:1.15rem;}
+  .landing-nav .mark em{font-style:normal; color:var(--accent);}
+  .landing-nav button{font-family:var(--font-body); font-weight:700; font-size:.8rem; background:var(--ink); color:var(--paper); border:none; border-radius:99px; padding:8px 16px; cursor:pointer;}
+
+  .landing-hero{text-align:center; margin:18px 0 44px; position:relative; overflow:hidden;}
+  .landing-hero .ghost-num{position:absolute; top:-.3em; right:-.05em; font-family:var(--font-display); font-weight:700; font-size:clamp(7rem,40vw,11rem); line-height:1; color:color-mix(in srgb, var(--ink) 6%, transparent); z-index:0; pointer-events:none; user-select:none;}
+  .landing-hero .eyebrow{position:relative; font-family:var(--font-hand); font-size:1.25rem; color:var(--accent-strong); transform:rotate(-2deg); display:inline-block; margin-bottom:6px;}
+  .landing-hero .mark{position:relative; font-family:var(--font-display); font-weight:700; font-size:clamp(3.4rem, 18vw, 6.8rem); letter-spacing:-.01em; line-height:.96;}
   .landing-hero .mark em{font-style:normal; color:var(--accent);}
-  .landing-hero p{color:var(--muted); font-size:1.05rem; margin:12px auto 0; max-width:42ch;}
+  .landing-hero .underline{position:relative; display:inline-block;}
+  .landing-hero .underline svg{position:absolute; left:-3%; bottom:-.1em; width:106%; height:.5em; z-index:-1;}
+  .landing-hero p{position:relative; color:var(--muted); font-size:1.18rem; margin:14px auto 0; max-width:38ch;}
+  .landing-hero-actions{position:relative; margin-top:26px; display:flex; flex-direction:column; align-items:center; gap:10px;}
+  .landing-hero-actions .btn{max-width:320px; width:100%;}
+  .landing-hero-actions .note{font-family:var(--font-hand); font-size:1.1rem; color:var(--muted);}
+  .landing-hero-actions .note svg{display:inline-block; width:52px; height:9px; vertical-align:-2px; margin-left:2px;}
+
   .landing-section{margin-bottom:40px;}
-  .landing-section h2{font-family:var(--font-display); font-weight:600; font-size:1.3rem; margin:0 0 18px;}
-  .landing-steps{list-style:none; margin:0; padding:0;}
-  .landing-steps li{display:grid; grid-template-columns:32px 1fr; gap:12px; padding:13px 0; border-top:1px solid var(--line); font-size:.95rem;}
-  .landing-steps li:first-child{border-top:none;}
-  .landing-steps .num{font-family:var(--font-display); font-size:1.15rem; color:var(--accent); font-weight:600;}
-  .landing-features{display:flex; flex-direction:column; gap:14px;}
-  .landing-feature{display:flex; gap:12px; align-items:flex-start; font-size:.95rem;}
-  .landing-feature .icon{font-size:1.25rem; flex-shrink:0; line-height:1.3;}
-  .landing-trust{background:var(--good-soft); border-radius:16px; padding:26px 24px;}
-  .landing-trust h2{color:var(--good);}
-  .landing-pricing{background:var(--paper-raised); border:1px solid var(--line); border-radius:16px; padding:26px 22px; text-align:center;}
-  .landing-pricing .price{font-family:var(--font-display); font-size:2.1rem; font-weight:700; white-space:nowrap;}
-  .landing-pricing .price span{font-size:.95rem; color:var(--muted); font-weight:400; font-family:var(--font-body);}
+  .landing-section .kicker{font-family:var(--font-body); font-weight:800; text-transform:uppercase; letter-spacing:.09em; font-size:.75rem; color:var(--accent); margin-bottom:10px;}
+  .landing-section h2{font-family:var(--font-display); font-weight:600; font-size:clamp(1.5rem,5vw,1.85rem); margin:0 0 18px;}
+
+  .landing-problem{background:var(--ink); color:var(--paper); border-radius:22px; padding:30px 26px;}
+  .landing-problem .kicker{color:var(--accent);}
+  .landing-problem p{font-size:1.08rem; margin-top:14px; max-width:48ch; color:color-mix(in srgb, var(--paper) 72%, transparent);}
+  .landing-problem p.big{font-family:var(--font-display); font-style:italic; font-size:clamp(1.3rem,4.4vw,1.6rem); font-weight:500; margin-top:20px; line-height:1.32; color:var(--paper);}
+
+  .landing-steps{margin-top:24px; display:flex; flex-direction:column;}
+  .landing-steps .step{display:flex; gap:16px; padding-block:18px; border-bottom:1px solid var(--line); align-items:flex-start;}
+  .landing-steps .step:first-child{padding-top:0;}
+  .landing-steps .step:last-child{border-bottom:none;}
+  .landing-steps .step .num{font-family:var(--font-display); font-style:italic; font-weight:600; font-size:1.7rem; color:var(--accent); flex:none; width:1.2em;}
+  .landing-steps .step b{display:block; font-size:1.05rem; margin-bottom:2px;}
+  .landing-steps .step span{color:var(--muted); font-size:.96rem;}
+
+  .landing-demo{margin-top:24px; display:flex; justify-content:center;}
+  .landing-phone{width:100%; max-width:300px; background:var(--paper-raised); border:1px solid var(--line); border-radius:22px; padding:6px; transform:rotate(-1.2deg); box-shadow:0 26px 54px -26px color-mix(in srgb, var(--ink) 50%, transparent), 0 4px 10px -4px color-mix(in srgb, var(--ink) 18%, transparent); transition:transform .25s ease, box-shadow .25s ease;}
+  .landing-phone:hover{transform:rotate(-1.2deg) translateY(-5px); box-shadow:0 34px 64px -24px color-mix(in srgb, var(--ink) 55%, transparent), 0 6px 14px -4px color-mix(in srgb, var(--ink) 22%, transparent);}
+  .landing-phone-notch{height:16px; display:flex; align-items:center; justify-content:center;}
+  .landing-phone-notch span{width:42px; height:5px; border-radius:99px; background:var(--line);}
+  .landing-phone-inner{padding:4px 12px 14px;}
+  .landing-phone-head{font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin-bottom:8px;}
+  .landing-phone .phone-card{background:var(--paper-sunken); border-radius:12px; padding:13px;}
+  .landing-phone .phone-card > *{opacity:0; transform:translateY(7px); transition:opacity .45s ease, transform .45s ease;}
+  .landing-phone .phone-card.in > *{opacity:1; transform:translateY(0);}
+  .landing-phone .phone-card.in > *:nth-child(1){transition-delay:.05s;}
+  .landing-phone .phone-card.in > *:nth-child(2){transition-delay:.24s;}
+  .landing-phone .phone-card.in > *:nth-child(3){transition-delay:.44s;}
+  .landing-phone .frac{display:inline-flex; flex-direction:column; text-align:center; vertical-align:middle; font-size:.92em; line-height:1.1; margin:0 2px;}
+  .landing-phone .frac span{border-bottom:1.4px solid currentColor; padding:0 3px;}
+  .landing-phone .frac em{font-style:normal; padding-top:1px;}
+
+  .landing-tick{flex:none; width:24px; height:20px; margin-top:2px;}
+  .landing-tick path{fill:none; stroke:var(--accent); stroke-width:3.4; stroke-linecap:round; stroke-linejoin:round;}
+  .landing-checklist{margin-top:22px; display:flex; flex-direction:column;}
+  .landing-checklist .item{display:flex; gap:13px; align-items:flex-start; padding-block:15px; border-bottom:1px solid var(--line);}
+  .landing-checklist .item:last-child{border-bottom:none;}
+  .landing-checklist .item b{display:block; margin-bottom:2px; font-size:1.02rem;}
+  .landing-checklist .item span{color:var(--muted); font-size:.94rem;}
+
+  .landing-trust{margin-top:32px;}
+  .landing-trust h3{font-family:var(--font-display); font-weight:600; font-size:1.25rem; margin-bottom:14px; color:var(--good);}
+  .landing-trust ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column;}
+  .landing-trust li{border-left:3px solid var(--good); padding:11px 0 11px 15px; font-size:.95rem;}
+  .landing-trust li b{font-weight:700; display:block; margin-bottom:2px;}
+  .landing-trust li span{color:var(--muted);}
+
+  .landing-price{margin-top:24px; background:var(--paper-raised); border:1.5px solid var(--ink); border-radius:20px; padding:32px 24px 26px; text-align:center; position:relative; box-shadow:0 22px 46px -28px color-mix(in srgb, var(--ink) 45%, transparent);}
+  .landing-price .tag{position:absolute; top:-13px; left:50%; transform:translateX(-50%) rotate(-2deg); background:var(--accent); color:#fff; font-weight:800; font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; padding:6px 14px; border-radius:99px; box-shadow:0 4px 0 var(--accent-strong);}
+  .landing-price .num{font-family:var(--font-display); font-weight:700; font-size:2.8rem;}
+  .landing-price .num sup{font-size:1.05rem; font-weight:600;}
+  .landing-price p{margin-top:8px; color:var(--muted); font-size:.92rem; max-width:36ch; margin-inline:auto;}
+  .landing-price .form{margin-top:20px; display:flex; flex-direction:column; gap:10px; max-width:320px; margin-inline:auto;}
   nav{max-width:640px; margin:14px auto 0; display:flex; gap:4px;}
   nav button{flex:1; background:none; border:none; padding:10px 4px 12px; font-size:.86rem; font-weight:600; color:var(--muted); border-bottom:2px solid transparent; cursor:pointer;}
   nav button.active{color:var(--ink); border-bottom-color:var(--accent);}
@@ -564,86 +617,190 @@
     els.forEach(el => io.observe(el));
   }
 
+  let landingParallaxBound = false;
+
+  function initLandingExtras(){
+    const root = $('app-gate');
+    if (!root) return;
+
+    root.querySelectorAll('.landing-hero .underline path, .landing-hero-actions .note path').forEach((p, i) => {
+      const len = p.getTotalLength();
+      p.style.strokeDasharray = len;
+      p.style.strokeDashoffset = len;
+      setTimeout(() => {
+        p.style.transition = 'stroke-dashoffset .55s cubic-bezier(.2,.7,.2,1)';
+        p.style.strokeDashoffset = '0';
+      }, 900 + i * 250);
+    });
+
+    const checklist = root.querySelector('.landing-checklist');
+    if (checklist) {
+      const ticks = Array.from(checklist.querySelectorAll('.landing-tick path'));
+      ticks.forEach(p => {
+        const len = p.getTotalLength();
+        p.style.strokeDasharray = len;
+        p.style.strokeDashoffset = len;
+      });
+      const tickIO = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (!e.isIntersecting) return;
+          ticks.forEach((p, i) => {
+            setTimeout(() => {
+              p.style.transition = 'stroke-dashoffset .4s cubic-bezier(.3,.6,.3,1)';
+              p.style.strokeDashoffset = '0';
+            }, i * 170);
+          });
+          tickIO.unobserve(checklist);
+        });
+      }, { threshold: .5 });
+      tickIO.observe(checklist);
+    }
+
+    const phoneCard = root.querySelector('.landing-phone .phone-card');
+    if (phoneCard) {
+      const phoneIO = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { phoneCard.classList.add('in'); phoneIO.unobserve(phoneCard); } });
+      }, { threshold: .4 });
+      phoneIO.observe(phoneCard);
+    }
+
+    const priceCard = root.querySelector('.landing-price');
+    const countEl = root.querySelector('#landing-price-count');
+    if (priceCard && countEl) {
+      const priceIO = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (!e.isIntersecting) return;
+          let start = null; const dur = 900, target = 6.99;
+          function step(ts){
+            if (!start) start = ts;
+            const progress = Math.min((ts - start) / dur, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            countEl.textContent = (target * eased).toFixed(2).replace('.', ',');
+            if (progress < 1) requestAnimationFrame(step);
+          }
+          requestAnimationFrame(step);
+          priceIO.unobserve(priceCard);
+        });
+      }, { threshold: .5 });
+      priceIO.observe(priceCard);
+    }
+
+    if (root.querySelector('.ghost-num') && !landingParallaxBound) {
+      landingParallaxBound = true;
+      let ticking = false;
+      root.addEventListener('scroll', () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          const g = root.querySelector('.ghost-num');
+          if (g) g.style.transform = 'translateY(' + Math.min(root.scrollTop * 0.1, 60) + 'px)';
+          ticking = false;
+        });
+      }, { passive: true });
+    }
+  }
+
   function renderGateLanding(defaultEmail, message){
     $('app-gate').innerHTML =
       '<div class="landing">' +
+
+        '<div class="landing-nav">' +
+          '<div class="mark">67 <em>TEEN</em></div>' +
+          '<button id="landing-nav-cta">Essayer</button>' +
+        '</div>' +
+
         '<div class="landing-hero">' +
+          '<span class="ghost-num" aria-hidden="true">67</span>' +
+          '<div class="eyebrow">chaque soir, entre 6 et 7</div>' +
           '<div class="mark hero-mark">' +
             '<span class="num-pop num-pop-1">6</span>' +
-            '<span class="num-pop num-pop-2">7</span> ' +
-            '<em class="hero-teen">TEEN</em>' +
+            '<span class="num-pop num-pop-2">7</span> ' +
+            '<span class="underline"><em class="hero-teen">TEEN</em><svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M2,14 C40,20 160,20 198,10" stroke="var(--marker)" stroke-width="14" fill="none" stroke-linecap="round"/></svg></span>' +
           '</div>' +
           '<p class="hero-sub">L’IA qui explique, qui challenge, et qui ne fait jamais le devoir à la place de votre ado.</p>' +
-        '</div>' +
-
-        '<div class="landing-section scroll-reveal">' +
-          '<h2>Comment ça marche</h2>' +
-          '<p class="hint" style="margin:-6px 0 18px;">Vous créez le compte, votre ado l’utilise.</p>' +
-          '<ol class="landing-steps">' +
-            '<li class="scroll-reveal"><span class="num">1</span><span>Il prend son cours en photo, ou colle le texte à réviser.</span></li>' +
-            '<li class="scroll-reveal"><span class="num">2</span><span>67 TEEN résume simplement, réexplique en détail, puis le challenge avec un vrai quiz — pas des questions faciles.</span></li>' +
-            '<li class="scroll-reveal"><span class="num">3</span><span>Il peut recommencer le quiz plusieurs fois ; l’IA revient ensuite sur ce qui n’est pas encore acquis.</span></li>' +
-          '</ol>' +
-        '</div>' +
-
-        '<div class="landing-section scroll-reveal">' +
-          '<h2>Un exemple concret</h2>' +
-          '<p class="hint" style="margin:-6px 0 18px;">Sur un cours de maths sur les fractions — à quoi ça ressemble vraiment :</p>' +
-          '<div class="card">' +
-            '<h3 style="margin-top:0;">Résumé</h3>' +
-            '<p style="margin:0;">Une fraction représente une partie d’un tout. Le numérateur (en haut) compte les parts qu’on prend, le dénominateur (en bas) indique en combien de parts égales le tout est découpé.</p>' +
+          '<div class="landing-hero-actions">' +
+            '<button class="btn" id="landing-hero-cta">Essayer gratuitement — 7 jours</button>' +
+            '<span class="note">résiliable en 1 clic<svg viewBox="0 0 60 10" aria-hidden="true"><path d="M2,7 Q15,1 30,6 T58,5" stroke="var(--accent)" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg></span>' +
           '</div>' +
-          '<div class="card">' +
-            '<h3 style="margin-top:0;">Question du quiz</h3>' +
-            '<p style="margin:0 0 12px;">Que représente le dénominateur d’une fraction ?</p>' +
-            '<div class="qcm-options">' +
-              '<div class="qcm-option">Le nombre de parts qu’on prend</div>' +
-              '<div class="qcm-option correct">Le nombre total de parts égales</div>' +
-              '<div class="qcm-option">Le résultat de la division</div>' +
-              '<div class="qcm-option">Toujours 100</div>' +
+        '</div>' +
+
+        '<div class="landing-section scroll-reveal">' +
+          '<div class="landing-problem">' +
+            '<div class="kicker">le constat</div>' +
+            '<h2>18h30. Le classeur est ouvert. Personne ne sait par où commencer.</h2>' +
+            '<p>Le parent n’a plus le niveau depuis longtemps — ou plus le temps. L’ado, lui, préfère chatter avec une IA qui lui donne direct la réponse. Résultat : le contrôle arrive, et rien n’est vraiment su.</p>' +
+            '<p class="big">67 TEEN se met entre les deux : il explique, il interroge, et il ne lâche jamais la réponse toute cuite.</p>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="landing-section scroll-reveal">' +
+          '<div class="kicker">comment ça marche</div>' +
+          '<h2>Trois étapes, chaque soir</h2>' +
+          '<div class="landing-steps">' +
+            '<div class="step"><div class="num">1</div><div><b>Photo ou sujet</b><span>Il prend son cours en photo, ou colle le texte à réviser.</span></div></div>' +
+            '<div class="step"><div class="num">2</div><div><b>Résumé, puis explication</b><span>67 TEEN résume simplement, réexplique en détail, avec des exemples — schémas et calculs compris.</span></div></div>' +
+            '<div class="step"><div class="num">3</div><div><b>Le quiz qui challenge</b><span>Un vrai quiz, pas des questions faciles. Ce qui coince est ré-expliqué, ciblé, jusqu’à ce que ce soit acquis.</span></div></div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="landing-section scroll-reveal">' +
+          '<div class="kicker">en vrai</div>' +
+          '<h2>Ce que voit votre ado</h2>' +
+          '<div class="landing-demo">' +
+            '<div class="landing-phone">' +
+              '<div class="landing-phone-notch"><span></span></div>' +
+              '<div class="landing-phone-inner">' +
+                '<div class="landing-phone-head">Maths · les fractions</div>' +
+                '<div class="phone-card rich-text">' +
+                  '<p>Pour simplifier une fraction, on divise le numérateur et le dénominateur par le même nombre.</p>' +
+                  '<div class="callout callout-exemple"><span class="callout-label">💡 Exemple</span><p><span class="frac"><span>6</span><em>8</em></span> = <span class="frac"><span>6÷2</span><em>8÷2</em></span> = <span class="frac"><span>3</span><em>4</em></span></p></div>' +
+                  '<div class="callout callout-retenir"><span class="callout-label">📌 À retenir</span><p>on ne peut additionner deux fractions que si elles ont le même dénominateur.</p></div>' +
+                '</div>' +
+              '</div>' +
             '</div>' +
           '</div>' +
         '</div>' +
 
         '<div class="landing-section scroll-reveal">' +
-          '<h2>Ce qui change avec 67 TEEN</h2>' +
-          '<div class="landing-features">' +
-            '<div class="landing-feature scroll-reveal"><span class="icon">🎯</span><span>Un quiz exigeant, pas un questionnaire qu’on réussit sans comprendre.</span></div>' +
-            '<div class="landing-feature scroll-reveal"><span class="icon">🔑</span><span>Un espace parent séparé, avec les séances et les scores de chaque enfant.</span></div>' +
-            '<div class="landing-feature scroll-reveal"><span class="icon">🗂️</span><span>Un historique propre à chaque enfant — personne ne voit les séances des autres.</span></div>' +
+          '<div class="kicker">ce qui change</div>' +
+          '<h2>Corrigé à la maison, comme en classe</h2>' +
+          '<div class="landing-checklist">' +
+            '<div class="item"><svg class="landing-tick" viewBox="0 0 30 26" style="transform:rotate(-3deg)"><path d="M4,14 Q9,19 13,22 Q19,13 27,3"/></svg><div><b>Un quiz exigeant</b><span>Pas un questionnaire qu’on réussit sans comprendre.</span></div></div>' +
+            '<div class="item"><svg class="landing-tick" viewBox="0 0 30 26" style="transform:rotate(2deg)"><path d="M4,14 Q9,19 13,22 Q19,13 27,3"/></svg><div><b>Un espace parent séparé</b><span>Les séances et les scores de chaque enfant, sans se mélanger.</span></div></div>' +
+            '<div class="item"><svg class="landing-tick" viewBox="0 0 30 26" style="transform:rotate(-2deg)"><path d="M4,14 Q9,19 13,22 Q19,13 27,3"/></svg><div><b>Un historique privé</b><span>Propre à chaque enfant — personne ne voit les séances des autres.</span></div></div>' +
           '</div>' +
-        '</div>' +
 
-        '<div class="landing-section scroll-reveal">' +
           '<div class="landing-trust">' +
-            '<h2>Pensé pour rassurer les parents</h2>' +
-            '<div class="landing-features">' +
-              '<div class="landing-feature scroll-reveal"><span class="icon">🎯</span><span><strong>Uniquement les devoirs.</strong> Pas de chat libre, pas de réseaux, pas de sujets hors-sujet — l’IA ne répond qu’aux demandes de révision.</span></div>' +
-              '<div class="landing-feature scroll-reveal"><span class="icon">🔍</span><span><strong>Vous voyez tout.</strong> L’espace parent, protégé par votre propre code, montre les séances et les scores de chaque enfant.</span></div>' +
-              '<div class="landing-feature scroll-reveal"><span class="icon">🛡️</span><span><strong>Rien n’est revendu.</strong> Pas de publicité, aucune donnée partagée avec des tiers.</span></div>' +
-              '<div class="landing-feature scroll-reveal"><span class="icon">🤝</span><span><strong>Vous gardez la main.</strong> C’est vous qui gérez l’abonnement, résiliable à tout moment.</span></div>' +
-            '</div>' +
+            '<h3>Pensé pour rassurer les parents</h3>' +
+            '<ul>' +
+              '<li><b>Uniquement les devoirs.</b> <span>Pas de chat libre, pas de réseaux, pas de sujets hors-sujet — l’IA ne répond qu’aux demandes de révision.</span></li>' +
+              '<li><b>Vous voyez tout.</b> <span>L’espace parent, protégé par votre propre code, montre les séances et les scores de chaque enfant.</span></li>' +
+              '<li><b>Rien n’est revendu.</b> <span>Pas de publicité, aucune donnée partagée avec des tiers.</span></li>' +
+              '<li><b>Vous gardez la main.</b> <span>C’est vous qui gérez l’abonnement, résiliable à tout moment.</span></li>' +
+            '</ul>' +
           '</div>' +
         '</div>' +
 
         '<div class="landing-section scroll-reveal">' +
-          '<h2>Un seul abonnement, toute la famille</h2>' +
-          '<div class="landing-pricing">' +
-            '<div class="price">6,99€ <span>/ mois</span></div>' +
-            '<p class="hint" style="margin:8px 0 0;">7 jours d’essai gratuit, puis 6,99€/mois. Résiliable à tout moment. Le parent s’inscrit, puis ajoute jusqu’à 3 ados depuis son espace — sans payer en plus.</p>' +
+          '<div class="landing-price" id="landing-signup">' +
+            '<div class="tag">7 jours offerts</div>' +
+            '<div class="num"><span id="landing-price-count">0,00</span>€<sup> / mois</sup></div>' +
+            '<p>Un seul abonnement pour toute la famille. Le parent s’inscrit, puis ajoute jusqu’à 3 ados depuis son espace — sans payer en plus.</p>' +
+            (message ? '<div class="notice" style="margin-top:16px;">' + escapeHtml(message) + '</div>' : '') +
+            '<div class="form">' +
+              '<input type="email" class="gate-input" id="gate-email" placeholder="votre@email.fr" value="' + escapeHtml(defaultEmail || '') + '">' +
+              '<button class="btn" id="gate-subscribe-btn">Essayer gratuitement — 7 jours</button>' +
+            '</div>' +
+            '<button class="link-btn" id="gate-login-link" style="display:block; margin:14px auto 0;">J’ai déjà un compte</button>' +
+            '<div class="notice error" id="gate-error" hidden></div>' +
           '</div>' +
         '</div>' +
 
-        '<div class="card scroll-reveal" style="max-width:400px; margin:0 auto;">' +
-          (message ? '<div class="notice">' + escapeHtml(message) + '</div>' : '') +
-          '<input type="email" class="gate-input" id="gate-email" placeholder="votre@email.fr" value="' + escapeHtml(defaultEmail || '') + '" style="margin-bottom:12px;">' +
-          '<button class="btn" id="gate-subscribe-btn">Essayer gratuitement — 7 jours</button>' +
-          '<button class="link-btn" id="gate-login-link" style="display:block; margin:14px auto 0;">J’ai déjà un compte</button>' +
-          '<div class="notice error" id="gate-error" hidden></div>' +
-        '</div>' +
+        '<p class="hint" style="text-align:center;">67 TEEN — l’aide aux devoirs qui ne fait pas les devoirs.</p>' +
       '</div>';
 
     initScrollReveal();
+    initLandingExtras();
 
     $('gate-subscribe-btn').onclick = async () => {
       const email = $('gate-email').value.trim();
@@ -660,6 +817,10 @@
       }
     };
     $('gate-login-link').onclick = () => renderGateLoginForm(defaultEmail);
+
+    const scrollToSignup = () => $('landing-signup').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const navCta = $('landing-nav-cta'); if (navCta) navCta.onclick = scrollToSignup;
+    const heroCta = $('landing-hero-cta'); if (heroCta) heroCta.onclick = scrollToSignup;
   }
 
   function renderGateLoginForm(defaultEmail){
