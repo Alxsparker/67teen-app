@@ -1752,8 +1752,8 @@
       $('famille-email-input').value = '';
       $('famille-success').hidden = false;
       $('famille-success').textContent = res.emailSent
-        ? 'Ajouté ! Un email de connexion vient de lui être envoyé.'
-        : "Ajouté ! L'email n'a pas pu être envoyé — partage-lui plutôt ce lien :";
+        ? 'Ajouté ! Un email de connexion vient de lui être envoyé. Tu peux aussi lui transmettre ce lien directement :'
+        : "Ajouté ! L'email n'a pas pu être envoyé — transmets-lui plutôt ce lien :";
       if (res.link) {
         $('famille-invite-box').hidden = false;
         $('famille-invite-link').value = res.link;
