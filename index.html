@@ -586,14 +586,14 @@
           '<h2>Un seul abonnement, toute la famille</h2>' +
           '<div class="landing-pricing">' +
             '<div class="price">6,99€ <span>/ mois</span></div>' +
-            '<p class="hint" style="margin:8px 0 0;">Résiliable à tout moment. Le parent s’inscrit, puis ajoute jusqu’à 3 ados depuis son espace — sans payer en plus.</p>' +
+            '<p class="hint" style="margin:8px 0 0;">7 jours d’essai gratuit, puis 6,99€/mois. Résiliable à tout moment. Le parent s’inscrit, puis ajoute jusqu’à 3 ados depuis son espace — sans payer en plus.</p>' +
           '</div>' +
         '</div>' +
 
         '<div class="card scroll-reveal" style="max-width:400px; margin:0 auto;">' +
           (message ? '<div class="notice">' + escapeHtml(message) + '</div>' : '') +
           '<input type="email" class="gate-input" id="gate-email" placeholder="votre@email.fr" value="' + escapeHtml(defaultEmail || '') + '" style="margin-bottom:12px;">' +
-          '<button class="btn" id="gate-subscribe-btn">S’abonner — 6,99€/mois</button>' +
+          '<button class="btn" id="gate-subscribe-btn">Essayer gratuitement — 7 jours</button>' +
           '<button class="link-btn" id="gate-login-link" style="display:block; margin:14px auto 0;">J’ai déjà un compte</button>' +
           '<div class="notice error" id="gate-error" hidden></div>' +
         '</div>' +
@@ -611,7 +611,7 @@
         if (res.url) { window.location.href = res.url; return; }
         throw new Error('no_url');
       } catch(e) {
-        btn.disabled = false; btn.textContent = 'S’abonner — 6,99€/mois';
+        btn.disabled = false; btn.textContent = 'Essayer gratuitement — 7 jours';
         showGateError("Impossible de démarrer le paiement — réessaie.");
       }
     };
@@ -686,7 +686,7 @@
       history.replaceState({}, '', window.location.pathname);
       try {
         await callFn('teen-auth', { action: 'request_link', email: checkoutEmail });
-        renderGateMessage('Merci pour votre abonnement 🎉', 'Vérifiez votre boîte mail (' + checkoutEmail + ') pour vous connecter.');
+        renderGateMessage('Votre essai gratuit commence 🎉', 'Vérifiez votre boîte mail (' + checkoutEmail + ') pour vous connecter — 7 jours gratuits, résiliable à tout moment.');
         return;
       } catch(e) {
         renderGateLanding(checkoutEmail, 'Paiement reçu, mais l’envoi du lien a échoué — réessaie de te connecter.');
