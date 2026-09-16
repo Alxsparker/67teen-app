@@ -156,6 +156,8 @@
   .pin-box{max-width:280px; margin:40px auto; text-align:center;}
   .pin-box .icon{font-size:2.4rem; margin-bottom:14px;}
   .pin-box input{text-align:center; font-size:1.6rem; letter-spacing:.5rem; padding:14px; font-family:var(--font-display); font-weight:600;}
+  .pin-box input.gate-input{text-align:left; font-size:.95rem; letter-spacing:normal; font-family:var(--font-body); font-weight:400; padding:11px 13px;}
+  .pin-box .notice{text-align:left; margin-bottom:14px;}
   .pin-box .btn{margin-top:14px;}
   .pin-box .switch{margin-top:16px; font-size:.82rem; color:var(--muted); background:none; border:none; text-decoration:underline; cursor:pointer;}
 
@@ -247,16 +249,7 @@
 
 </main>
 
-<div id="app-gate" class="profile-gate" hidden>
-  <div class="pin-box">
-    <div class="icon">🔑</div>
-    <h2 id="app-gate-title">Accès à 67 TEEN</h2>
-    <p class="hint" id="app-gate-hint">Entre le code que tes parents t'ont donné.</p>
-    <input type="text" id="app-code-input" autocapitalize="off" autocorrect="off" style="text-align:center;">
-    <button class="btn" id="app-gate-btn" style="margin-top:16px;">Valider</button>
-    <div class="notice error" id="app-gate-error" hidden></div>
-  </div>
-</div>
+<div id="app-gate" class="profile-gate" hidden></div>
 
 <div id="profile-gate" class="profile-gate" hidden>
   <div class="pin-box">
@@ -423,54 +416,142 @@
     if (!getProfile() && !localStorage.getItem('teen_profile_skipped')) openProfileGate(false);
   }
 
-  // ---------------- code d'accès familial ----------------
+  // ---------------- abonnement / connexion ----------------
+  const SESSION_KEY = 'teen_session';
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  function showGateError(msg){
+    const el = $('gate-error');
+    if (el) { el.hidden = false; el.textContent = msg; }
+  }
+
+  function renderGateLanding(defaultEmail, message){
+    $('app-gate').innerHTML =
+      '<div class="pin-box">' +
+        '<div class="icon">🔑</div>' +
+        '<h2>67 TEEN</h2>' +
+        '<p class="hint">Abonne-toi pour donner accès à 67 TEEN à ta famille — 6,99€/mois.</p>' +
+        (message ? '<div class="notice">' + escapeHtml(message) + '</div>' : '') +
+        '<input type="email" class="gate-input" id="gate-email" placeholder="ton@email.fr" value="' + escapeHtml(defaultEmail || '') + '">' +
+        '<button class="btn" id="gate-subscribe-btn" style="margin-top:14px;">S’abonner — 6,99€/mois</button>' +
+        '<button class="pin-box switch" id="gate-login-link">J’ai déjà un compte</button>' +
+        '<div class="notice error" id="gate-error" hidden></div>' +
+      '</div>';
+
+    $('gate-subscribe-btn').onclick = async () => {
+      const email = $('gate-email').value.trim();
+      if (!EMAIL_RE.test(email)) { showGateError('Entre une adresse email valide.'); return; }
+      const btn = $('gate-subscribe-btn');
+      btn.disabled = true; btn.textContent = 'Redirection...';
+      try {
+        const res = await callFn('teen-billing', { action: 'checkout', email });
+        if (res.url) { window.location.href = res.url; return; }
+        throw new Error('no_url');
+      } catch(e) {
+        btn.disabled = false; btn.textContent = 'S’abonner — 6,99€/mois';
+        showGateError("Impossible de démarrer le paiement — réessaie.");
+      }
+    };
+    $('gate-login-link').onclick = () => renderGateLoginForm(defaultEmail);
+  }
+
+  function renderGateLoginForm(defaultEmail){
+    $('app-gate').innerHTML =
+      '<div class="pin-box">' +
+        '<div class="icon">✉️</div>' +
+        '<h2>Connexion</h2>' +
+        '<p class="hint">Entre ton email, on t’envoie un lien de connexion.</p>' +
+        '<input type="email" class="gate-input" id="gate-email2" placeholder="ton@email.fr" value="' + escapeHtml(defaultEmail || '') + '">' +
+        '<button class="btn" id="gate-send-link-btn" style="margin-top:14px;">Recevoir le lien</button>' +
+        '<button class="pin-box switch" id="gate-back-btn">Retour</button>' +
+        '<div class="notice error" id="gate-error" hidden></div>' +
+      '</div>';
+    $('gate-send-link-btn').onclick = async () => {
+      const email = $('gate-email2').value.trim();
+      if (!EMAIL_RE.test(email)) { showGateError('Entre une adresse email valide.'); return; }
+      const btn = $('gate-send-link-btn');
+      btn.disabled = true; btn.textContent = 'Envoi...';
+      try {
+        await callFn('teen-auth', { action: 'request_link', email });
+        renderGateMessage('Vérifie ta boîte mail 📬', 'On vient d’envoyer un lien de connexion à ' + email + '. Clique dessus pour entrer.');
+      } catch(e) {
+        btn.disabled = false; btn.textContent = 'Recevoir le lien';
+        showGateError("Impossible d'envoyer le lien — réessaie.");
+      }
+    };
+    $('gate-back-btn').onclick = () => renderGateLanding(defaultEmail);
+  }
+
+  function renderGateMessage(title, text, showResubscribe){
+    $('app-gate').innerHTML =
+      '<div class="pin-box">' +
+        '<div class="icon">📬</div>' +
+        '<h2>' + escapeHtml(title) + '</h2>' +
+        '<p class="hint">' + escapeHtml(text) + '</p>' +
+        (showResubscribe ? '<button class="btn" id="gate-resub-btn" style="margin-top:14px;">S’abonner</button>' : '') +
+      '</div>';
+    if (showResubscribe) $('gate-resub-btn').onclick = () => renderGateLanding();
+  }
+
   async function checkAppAccess(){
-    if (localStorage.getItem('teen_app_unlocked') === '1') { enterApp(); return; }
-    let status;
-    try { status = await callFn('teen-parent', { action: 'app_status' }); }
-    catch(e) {
-      $('app-gate').hidden = false;
-      $('app-gate-error').hidden = false;
-      $('app-gate-error').textContent = "Impossible de contacter le serveur — réessaie.";
-      return;
-    }
     $('app-gate').hidden = false;
-    if (!status.configured) {
-      $('app-gate-title').textContent = 'Créer le code familial';
-      $('app-gate-hint').textContent = "Personne n'a encore de code — choisis-en un à partager avec ta famille.";
-      $('app-gate-btn').onclick = async () => {
-        const code = $('app-code-input').value;
-        try {
-          await callFn('teen-parent', { action: 'app_set', code });
-          localStorage.setItem('teen_app_unlocked', '1');
+
+    const params = new URLSearchParams(window.location.search);
+    const loginToken = params.get('login');
+    const checkoutStatus = params.get('checkout');
+    const checkoutEmail = params.get('email');
+
+    if (loginToken) {
+      history.replaceState({}, '', window.location.pathname);
+      try {
+        const res = await callFn('teen-auth', { action: 'verify_link', token: loginToken });
+        if (res.ok) {
+          localStorage.setItem(SESSION_KEY, res.sessionToken);
+          if (res.status === 'active' || res.status === 'free') { $('app-gate').hidden = true; enterApp(); return; }
+          renderGateMessage('Abonnement inactif', 'Ton compte existe mais l’abonnement n’est pas actif.', true);
+          return;
+        }
+        renderGateLanding(null, 'Ce lien a expiré ou n’est plus valable — redemande-en un.');
+        return;
+      } catch(e) {
+        renderGateLanding(null, 'Erreur de connexion — réessaie.');
+        return;
+      }
+    }
+
+    if (checkoutStatus === 'success' && checkoutEmail) {
+      history.replaceState({}, '', window.location.pathname);
+      try {
+        await callFn('teen-auth', { action: 'request_link', email: checkoutEmail });
+        renderGateMessage('Merci pour ton abonnement 🎉', 'Vérifie ta boîte mail (' + checkoutEmail + ') pour te connecter.');
+        return;
+      } catch(e) {
+        renderGateLanding(checkoutEmail, 'Paiement reçu, mais l’envoi du lien a échoué — réessaie de te connecter.');
+        return;
+      }
+    }
+    if (checkoutStatus === 'cancel') {
+      history.replaceState({}, '', window.location.pathname);
+    }
+
+    const savedSession = localStorage.getItem(SESSION_KEY);
+    if (savedSession) {
+      try {
+        const res = await callFn('teen-auth', { action: 'check_session', sessionToken: savedSession });
+        if (res.ok && (res.status === 'active' || res.status === 'free')) {
           $('app-gate').hidden = true;
           enterApp();
-        } catch(e) {
-          $('app-gate-error').hidden = false;
-          $('app-gate-error').textContent = e.code === 'invalid_code' ? 'Le code doit faire au moins 4 caractères.' : "Erreur — réessaie.";
+          return;
         }
-      };
-    } else {
-      $('app-gate-title').textContent = 'Accès à 67 TEEN';
-      $('app-gate-hint').textContent = "Entre le code que tes parents t'ont donné.";
-      $('app-gate-btn').onclick = async () => {
-        const code = $('app-code-input').value;
-        try {
-          const res = await callFn('teen-parent', { action: 'app_verify', code });
-          if (res.ok) {
-            localStorage.setItem('teen_app_unlocked', '1');
-            $('app-gate').hidden = true;
-            enterApp();
-          } else {
-            $('app-gate-error').hidden = false;
-            $('app-gate-error').textContent = 'Code incorrect.';
-          }
-        } catch(e) {
-          $('app-gate-error').hidden = false;
-          $('app-gate-error').textContent = "Erreur — réessaie.";
+        if (res.ok) {
+          renderGateMessage('Abonnement inactif', 'Ton compte existe mais l’abonnement n’est pas actif.', true);
+          return;
         }
-      };
+        localStorage.removeItem(SESSION_KEY);
+      } catch(e) { /* on retombe sur la page d'accueil */ }
     }
+
+    renderGateLanding();
   }
   checkAppAccess();
 
@@ -902,7 +983,7 @@
   async function renderParentDashboard(v){
     v.innerHTML =
       '<div class="parent-header"><h2>Bulletins de notes</h2>' +
-        '<span><button class="link-btn" id="btn-change-pin">Code parent</button> · <button class="link-btn" id="btn-change-appcode">Code familial</button></span>' +
+        '<button class="link-btn" id="btn-change-pin">Code parent</button>' +
       '</div>' +
       '<p class="hint">Photographie le bulletin si l\'école ne propose pas de connexion automatique.</p>' +
       '<div class="dropzone" id="bulletin-dropzone"><span class="icon">🧾</span><span class="label">Photographier un bulletin</span> <span class="sub">toutes les notes seront relues avant d\'être enregistrées</span>' +
@@ -913,39 +994,8 @@
       '<div id="bulletins-list"></div>';
 
     $('btn-change-pin').onclick = renderChangePin;
-    $('btn-change-appcode').onclick = renderChangeAppCode;
     $('bulletin-input').addEventListener('change', handleBulletinPhoto);
     loadBulletins();
-  }
-
-  function renderChangeAppCode(){
-    const v = $('view-parent');
-    v.innerHTML =
-      '<div class="pin-box"><div class="icon">🔑</div><h2>Changer le code familial</h2>' +
-      '<label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;">Code actuel</label>' +
-      '<input type="text" id="appcode-old">' +
-      '<label style="display:block;font-size:.85rem;font-weight:700;margin:14px 0 6px;">Nouveau code</label>' +
-      '<input type="text" id="appcode-new">' +
-      '<button class="btn" id="appcode-change-btn">Enregistrer</button>' +
-      '<button class="pin-box switch" id="appcode-cancel">Annuler</button>' +
-      '<div class="notice error" id="appcode-change-error" hidden></div></div>';
-    $('appcode-cancel').onclick = () => renderParent();
-    $('appcode-change-btn').onclick = async () => {
-      const oldCode = $('appcode-old').value.trim();
-      const code = $('appcode-new').value.trim();
-      if (code.length < 4) {
-        $('appcode-change-error').hidden = false;
-        $('appcode-change-error').textContent = 'Le nouveau code doit faire au moins 4 caractères.';
-        return;
-      }
-      try {
-        await callFn('teen-parent', { action: 'app_set', code, oldCode });
-        renderParent();
-      } catch(e) {
-        $('appcode-change-error').hidden = false;
-        $('appcode-change-error').textContent = e.code === 'wrong_old_code' ? "Le code actuel n'est pas correct." : "Erreur — réessaie.";
-      }
-    };
   }
 
   function renderChangePin(){
