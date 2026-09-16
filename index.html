@@ -322,11 +322,12 @@
     #fiche-print-area{position:absolute; top:0; left:0; width:100%; padding:0;}
     #fiche-print-area .print-only-title{display:block; font-family:var(--font-display); font-weight:700; font-size:1.5rem; margin-bottom:6px; color:#000;}
     #fiche-print-area .print-subtitle{display:block; color:#555; font-size:.85rem; margin-bottom:22px;}
-    body{background:#fff; color:#000;}
-    #fiche-print-area .matiere-tag{background:none; border:1px solid #000; color:#000;}
-    #fiche-print-area .card{border:none; box-shadow:none; padding:0 0 18px; margin-bottom:18px; break-inside:avoid;}
-    #fiche-print-area .card h3{color:#000;}
-    #fiche-print-area .callout{background:none !important; border:1px solid #000; color:#000;}
+    body{background:#fff !important; color:#000 !important;}
+    #fiche-print-area, #fiche-print-area p, #fiche-print-area div, #fiche-print-area span{color:#000 !important;}
+    #fiche-print-area .matiere-tag{background:none !important; border:1px solid #000; color:#000 !important;}
+    #fiche-print-area .card{background:#fff !important; border:none; box-shadow:none; padding:0 0 18px; margin-bottom:18px; break-inside:avoid;}
+    #fiche-print-area .card h3{color:#000 !important;}
+    #fiche-print-area .callout{background:none !important; border:1px solid #000; color:#000 !important;}
     #fiche-print-area .callout-label{color:#000 !important;}
   }
 </style>
@@ -1178,7 +1179,8 @@
         '</div>' +
         '<div id="final-section"></div>' +
       '</div>' +
-      '<button class="btn ghost" id="btn-nouvelle-seance">← Nouvelle séance</button>';
+      '<button class="btn secondary btn-print reveal" id="btn-print-fiche">Imprimer la fiche</button>' +
+      '<button class="btn ghost" id="btn-nouvelle-seance">Nouvelle séance</button>';
 
     renderMathIn(v);
     renderClarifications();
