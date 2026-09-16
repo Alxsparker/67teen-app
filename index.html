@@ -180,6 +180,9 @@
   .landing-trust li{flex:1 1 240px; border-left:3px solid var(--good); border-radius:0 10px 10px 0; background:color-mix(in srgb, var(--good) 7%, transparent); padding:12px 15px; font-size:.95rem;}
   .landing-trust li b{font-weight:700; display:block; margin-bottom:2px;}
   .landing-trust li span{color:var(--muted);}
+  .landing-legal-footer{display:flex; justify-content:center; gap:18px; flex-wrap:wrap; margin-top:14px;}
+  .landing-legal-footer a{color:var(--muted); font-size:.85rem; text-decoration:none;}
+  .landing-legal-footer a:hover{color:var(--accent);}
 
   .landing-price{margin-top:24px; background:var(--paper-raised); border:1.5px solid var(--ink); border-radius:24px; padding:44px 32px 36px; text-align:center; position:relative; box-shadow:0 22px 46px -28px color-mix(in srgb, var(--ink) 45%, transparent);}
   .landing-price .tag{position:absolute; top:-15px; left:50%; transform:translateX(-50%) rotate(-2deg); background:var(--accent); color:#fff; font-weight:800; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; padding:7px 16px; border-radius:99px; box-shadow:0 4px 0 var(--accent-strong);}
@@ -826,6 +829,16 @@
         '</div>' +
 
         '<div class="landing-section scroll-reveal">' +
+          '<div class="kicker">l’installation</div>' +
+          '<h2>Qui installe quoi ?</h2>' +
+          '<div class="landing-steps">' +
+            '<div class="step"><div class="num">1</div><div><b>Vous créez le compte</b><span>Vous vous abonnez, puis ajoutez l’email de chaque ado depuis votre espace parent.</span></div></div>' +
+            '<div class="step"><div class="num">2</div><div><b>Chaque ado installe 67 TEEN</b><span>Sur son propre téléphone, avec le lien reçu par email — ou copié et envoyé par SMS depuis votre espace parent.</span></div></div>' +
+            '<div class="step"><div class="num">3</div><div><b>Vous suivez les résultats</b><span>Retrouvez les séances et les scores de toute la famille dans votre espace parent, protégé par votre code.</span></div></div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="landing-section scroll-reveal">' +
           '<div class="landing-price" id="landing-signup">' +
             '<div class="tag">7 jours offerts</div>' +
             '<div class="num"><span id="landing-price-count">0,00</span>€<sup> / mois</sup></div>' +
@@ -841,6 +854,11 @@
         '</div>' +
 
         '<p class="hint" style="text-align:center;">67 TEEN — l’aide aux devoirs qui ne fait pas les devoirs.</p>' +
+        '<div class="landing-legal-footer">' +
+          '<a href="mentions-legales.html">Mentions légales</a>' +
+          '<a href="cgv.html">CGV</a>' +
+          '<a href="confidentialite.html">Confidentialité</a>' +
+        '</div>' +
       '</div>';
 
     initScrollReveal();
