@@ -311,15 +311,35 @@
     return data;
   }
 
-  function fileToBase64(file){
+  // Ré-encode toujours en JPEG côté téléphone : les photos iPhone (HEIC) ne sont
+  // pas lisibles par l'IA telles quelles, ce passage par un canvas les convertit.
+  function photoToJpegBase64(file, maxDim){
+    maxDim = maxDim || 1600;
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result;
-        resolve(result.slice(result.indexOf(',') + 1));
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        let width = img.naturalWidth, height = img.naturalHeight;
+        if (width > maxDim || height > maxDim) {
+          const scale = maxDim / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((blob) => {
+          if (!blob) { reject(new Error('encode_failed')); return; }
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.slice(reader.result.indexOf(',') + 1));
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        }, 'image/jpeg', 0.85);
       };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('decode_failed')); };
+      img.src = url;
     });
   }
 
@@ -533,8 +553,16 @@
         payload.niveau = profile.classe + (profile.age ? ' (' + profile.age + ' ans)' : '');
       }
       if (photoFile) {
-        payload.imageBase64 = await fileToBase64(photoFile);
-        payload.imageMediaType = photoFile.type || 'image/jpeg';
+        try {
+          payload.imageBase64 = await photoToJpegBase64(photoFile);
+        } catch(e) {
+          $('error-analyse').hidden = false;
+          $('error-analyse').textContent = "Cette photo n'a pas pu être lue — essaie une autre photo.";
+          $('loading-analyse').hidden = true;
+          $('btn-analyser').disabled = false;
+          return;
+        }
+        payload.imageMediaType = 'image/jpeg';
         if (commentaire) payload.commentaire = commentaire;
       } else {
         payload.texteCours = commentaire;
@@ -959,8 +987,8 @@
     $('bulletin-loading').hidden = false;
     $('bulletin-review').innerHTML = '';
     try {
-      const imageBase64 = await fileToBase64(f);
-      const data = await callFn('teen-ai', { action: 'bulletin', imageBase64, imageMediaType: f.type || 'image/jpeg' });
+      const imageBase64 = await photoToJpegBase64(f);
+      const data = await callFn('teen-ai', { action: 'bulletin', imageBase64, imageMediaType: 'image/jpeg' });
       bulletinDraft = {
         periode: data.periode || '',
         matieres: Array.isArray(data.matieres) ? data.matieres : [],
