@@ -573,7 +573,7 @@
           '<h2>Un seul abonnement, toute la famille</h2>' +
           '<div class="landing-pricing">' +
             '<div class="price">6,99€ <span>/ mois</span></div>' +
-            '<p class="hint" style="margin:8px 0 0;">Résiliable à tout moment. Aucune limite du nombre d’enfants.</p>' +
+            '<p class="hint" style="margin:8px 0 0;">Résiliable à tout moment. Le parent s’inscrit, puis ajoute jusqu’à 3 ados depuis son espace — sans payer en plus.</p>' +
           '</div>' +
         '</div>' +
 
@@ -1265,7 +1265,7 @@
         '<div id="parent-seances-list"></div>' +
       '</div>' +
       '<div id="parent-famille-view" hidden>' +
-        '<p class="hint">Ajoute l\'email de chaque enfant pour qu\'il ait accès à 67 TEEN avec ton abonnement, sans payer en plus.</p>' +
+        '<p class="hint">Ajoute l\'email de chaque enfant (jusqu\'à 3) pour qu\'il ait accès à 67 TEEN avec ton abonnement, sans payer en plus.</p>' +
         '<div id="famille-add-box">' +
           '<input type="email" class="gate-input" id="famille-email-input" placeholder="email-de-ton-enfant@exemple.fr">' +
           '<button class="btn" id="famille-add-btn" style="margin-top:10px;">Ajouter</button>' +
@@ -1336,7 +1336,9 @@
       loadFamilleMembers();
     } catch(e) {
       $('famille-error').hidden = false;
-      $('famille-error').textContent = e.code === 'not_active_subscriber' ? "Ton abonnement n'est pas actif." : "Impossible d'ajouter cet email — réessaie.";
+      $('famille-error').textContent = e.code === 'not_active_subscriber' ? "Ton abonnement n'est pas actif."
+        : e.code === 'family_limit_reached' ? "Limite atteinte — 3 ados maximum par famille."
+        : "Impossible d'ajouter cet email — réessaie.";
     } finally {
       btn.disabled = false; btn.textContent = 'Ajouter';
     }
