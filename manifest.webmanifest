@@ -2,7 +2,7 @@
   "name": "67 TEEN",
   "short_name": "67 TEEN",
   "start_url": ".",
-  "display": "standalone",
+  "display": "browser",
   "background_color": "#F4F5F0",
   "theme_color": "#E15A2E"
 }
