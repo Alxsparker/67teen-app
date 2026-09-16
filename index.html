@@ -313,6 +313,22 @@
 
   .parent-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;}
   .link-btn{background:none; border:none; color:var(--muted); font-size:.86rem; text-decoration:underline; cursor:pointer; padding:0;}
+
+  .btn-print{width:auto; padding:10px 18px; font-size:.9rem; margin-bottom:18px; display:inline-flex;}
+  .print-only-title{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    #fiche-print-area, #fiche-print-area *{visibility:visible;}
+    #fiche-print-area{position:absolute; top:0; left:0; width:100%; padding:0;}
+    #fiche-print-area .print-only-title{display:block; font-family:var(--font-display); font-weight:700; font-size:1.5rem; margin-bottom:6px; color:#000;}
+    #fiche-print-area .print-subtitle{display:block; color:#555; font-size:.85rem; margin-bottom:22px;}
+    body{background:#fff; color:#000;}
+    #fiche-print-area .matiere-tag{background:none; border:1px solid #000; color:#000;}
+    #fiche-print-area .card{border:none; box-shadow:none; padding:0 0 18px; margin-bottom:18px; break-inside:avoid;}
+    #fiche-print-area .card h3{color:#000;}
+    #fiche-print-area .callout{background:none !important; border:1px solid #000; color:#000;}
+    #fiche-print-area .callout-label{color:#000 !important;}
+  }
 </style>
 </head>
 <body>
@@ -1130,11 +1146,17 @@
   function renderResult(){
     const v = $('view-result');
     let photoHtml = photoPreviewUrl ? '<div class="result-photo"><img src="' + photoPreviewUrl + '" alt="Photo du cours"></div>' : '';
+    const dateStr = new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
     v.innerHTML =
       photoHtml +
-      '<span class="matiere-tag reveal">' + escapeHtml(draft.matiere || 'Matière') + '</span>' +
-      '<div class="card reveal reveal-1"><h3>Résumé</h3><div class="rich-text">' + renderRichText(draft.resume) + '</div></div>' +
-      '<div class="card reveal reveal-2"><h3>Ré-explication</h3><div class="rich-text">' + renderRichText(draft.reexplication) + '</div></div>' +
+      '<button class="btn secondary btn-print reveal" id="btn-print-fiche">🖨️ Imprimer la fiche</button>' +
+      '<div id="fiche-print-area">' +
+        '<div class="print-only-title">67 TEEN — Fiche de révision</div>' +
+        '<div class="print-subtitle">' + escapeHtml(draft.matiere || 'Matière') + ' · ' + dateStr + '</div>' +
+        '<span class="matiere-tag reveal">' + escapeHtml(draft.matiere || 'Matière') + '</span>' +
+        '<div class="card reveal reveal-1"><h3>Résumé</h3><div class="rich-text">' + renderRichText(draft.resume) + '</div></div>' +
+        '<div class="card reveal reveal-2"><h3>Ré-explication</h3><div class="rich-text">' + renderRichText(draft.reexplication) + '</div></div>' +
+      '</div>' +
       '<div class="card confidence-box reveal reveal-3" id="confidence-card">' +
         '<p style="margin:0 0 14px;">Relis si besoin — pas de pression. Une question avant de te lancer ?</p>' +
         '<div id="clarifications-list"></div>' +
@@ -1161,6 +1183,7 @@
 
     renderMathIn(v);
     renderClarifications();
+    $('btn-print-fiche').onclick = () => window.print();
 
     $('btn-ready-quiz').onclick = () => {
       $('confidence-card').hidden = true;
