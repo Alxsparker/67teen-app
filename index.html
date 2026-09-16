@@ -474,6 +474,7 @@
     if (!res.ok || data.error) {
       const err = new Error(data.message || data.error || 'Erreur serveur');
       err.code = data.error;
+      err.ownerEmail = data.ownerEmail;
       throw err;
     }
     return data;
@@ -615,9 +616,10 @@
     updateProfilePill();
   };
 
-  function enterApp(){
+  function enterApp(isOwner){
     $('app-header').hidden = false;
     $('app-main').hidden = false;
+    $('tab-parent').hidden = (isOwner === false);
     updateProfilePill();
     if (!getProfile() && !localStorage.getItem('teen_profile_skipped')) openProfileGate(false);
   }
@@ -918,7 +920,7 @@
         const res = await callFn('teen-auth', { action: 'verify_link', token: loginToken });
         if (res.ok) {
           localStorage.setItem(SESSION_KEY, res.sessionToken);
-          if (res.status === 'active' || res.status === 'free') { $('app-gate').hidden = true; enterApp(); return; }
+          if (res.status === 'active' || res.status === 'free') { $('app-gate').hidden = true; enterApp(res.isOwner); return; }
           renderGateMessage('Abonnement inactif', 'Ton compte existe mais l’abonnement n’est pas actif.', true);
           return;
         }
@@ -951,7 +953,7 @@
         const res = await callFn('teen-auth', { action: 'check_session', sessionToken: savedSession });
         if (res.ok && (res.status === 'active' || res.status === 'free')) {
           $('app-gate').hidden = true;
-          enterApp();
+          enterApp(res.isOwner);
           return;
         }
         if (res.ok) {
@@ -1400,25 +1402,28 @@
     const last = draft.attempts[draft.attempts.length - 1];
     try {
       const profile = getProfile();
-      const { error } = await sb.from('teen_seances').insert({
-        eleve: profile ? (profile.prenom || profile.classe || null) : null,
-        matiere: draft.matiere,
-        commentaire: draft.commentaire || '',
-        resume: draft.resume,
-        reexplication: draft.reexplication,
-        questions: last.questions,
-        answers: last.selections.map((si, i) => (last.questions[i].options || [])[si] || null),
-        corrections: last.questions.map((q, i) => ({
-          niveau: last.selections[i] === q.correct_index ? 'correct' : 'a_revoir',
-          commentaire: q.explication || ''
-        })),
-        score: last.score,
-        total: last.total,
-        tentatives: draft.attempts.length,
-        synthese_finale: draft.syntheseFinale || null,
-        moyenne_declaree: draft.moyenneDeclaree
+      await callFn('teen-seances', {
+        action: 'save',
+        sessionToken: localStorage.getItem(SESSION_KEY),
+        seance: {
+          eleve: profile ? (profile.prenom || profile.classe || null) : null,
+          matiere: draft.matiere,
+          commentaire: draft.commentaire || '',
+          resume: draft.resume,
+          reexplication: draft.reexplication,
+          questions: last.questions,
+          answers: last.selections.map((si, i) => (last.questions[i].options || [])[si] || null),
+          corrections: last.questions.map((q, i) => ({
+            niveau: last.selections[i] === q.correct_index ? 'correct' : 'a_revoir',
+            commentaire: q.explication || ''
+          })),
+          score: last.score,
+          total: last.total,
+          tentatives: draft.attempts.length,
+          synthese_finale: draft.syntheseFinale || null,
+          moyenne_declaree: draft.moyenneDeclaree
+        }
       });
-      if (error) throw error;
       btn.textContent = 'Séance enregistrée ✓';
       setTimeout(() => { resetForm(); switchView('history'); }, 700);
     } catch(e) {
@@ -1450,13 +1455,9 @@
   async function loadHistory(){
     const content = $('history-content');
     content.innerHTML = '<div class="loading"><span class="spinner"></span> chargement...</div>';
-    const profile = getProfile();
     try {
-      let query = sb.from('teen_seances').select('*').order('created_at', { ascending: false }).limit(50);
-      if (profile && profile.prenom) query = query.eq('eleve', profile.prenom);
-      const { data: seances, error } = await query;
-      if (error) throw error;
-      renderHistory(seances || []);
+      const res = await callFn('teen-seances', { action: 'list_mine', sessionToken: localStorage.getItem(SESSION_KEY) });
+      renderHistory(res.seances || []);
     } catch(e) {
       content.innerHTML = '<div class="notice error">Impossible de charger l\'historique.</div>';
     }
@@ -1510,7 +1511,7 @@
     const v = $('view-parent');
     v.innerHTML = '<div class="loading"><span class="spinner"></span> chargement...</div>';
     let status;
-    try { status = await callFn('teen-parent', { action: 'status' }); }
+    try { status = await callFn('teen-parent', { action: 'status', sessionToken: localStorage.getItem(SESSION_KEY) }); }
     catch(e) { v.innerHTML = '<div class="notice error">Impossible de contacter l\'espace parent — réessaie.</div>'; return; }
 
     if (!status.configured) return renderParentSetup(v);
@@ -1535,7 +1536,7 @@
         return;
       }
       try {
-        await callFn('teen-parent', { action: 'set', pin });
+        await callFn('teen-parent', { action: 'set', pin, sessionToken: localStorage.getItem(SESSION_KEY) });
         parentUnlocked = true;
         sessionStorage.setItem('teen_parent_unlocked', '1');
         renderParent();
@@ -1553,12 +1554,13 @@
       '<p class="hint">Entre le code pour voir le suivi des séances.</p>' +
       '<input type="tel" inputmode="numeric" maxlength="6" id="pin-check">' +
       '<button class="btn" id="pin-check-btn">Déverrouiller</button>' +
+      '<button class="pin-box switch" id="pin-forgot-btn">Code oublié ?</button>' +
       '<div class="notice error" id="pin-check-error" hidden></div>' +
       '</div>';
     $('pin-check-btn').onclick = async () => {
       const pin = $('pin-check').value.trim();
       try {
-        const res = await callFn('teen-parent', { action: 'verify', pin });
+        const res = await callFn('teen-parent', { action: 'verify', pin, sessionToken: localStorage.getItem(SESSION_KEY) });
         if (res.ok) {
           parentUnlocked = true;
           sessionStorage.setItem('teen_parent_unlocked', '1');
@@ -1572,6 +1574,57 @@
         $('pin-check-error').textContent = "Erreur — réessaie.";
       }
     };
+    $('pin-forgot-btn').onclick = async () => {
+      const btn = $('pin-forgot-btn');
+      btn.disabled = true; btn.textContent = 'Envoi...';
+      try {
+        await callFn('teen-parent', { action: 'request_reset', sessionToken: localStorage.getItem(SESSION_KEY) });
+        renderParentReset(v);
+      } catch(e) {
+        btn.disabled = false; btn.textContent = 'Code oublié ?';
+        $('pin-check-error').hidden = false;
+        $('pin-check-error').textContent = "Impossible d'envoyer le code — réessaie.";
+      }
+    };
+  }
+
+  function renderParentReset(v){
+    v.innerHTML =
+      '<div class="pin-box"><div class="icon"><svg width="40" height="40" viewBox="0 0 28 28" fill="none" stroke="var(--good)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="22" height="16" rx="2.5"/><path d="M4 8 L14 16 L24 8"/></svg></div>' +
+      '<h2>Réinitialiser le code</h2>' +
+      '<p class="hint">On vient d’envoyer un code à 6 chiffres par email. Entre-le ci-dessous avec ton nouveau code parent.</p>' +
+      '<label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;text-align:left;">Code reçu par email</label>' +
+      '<input type="tel" inputmode="numeric" maxlength="6" id="reset-code" style="margin-bottom:14px;">' +
+      '<label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;text-align:left;">Nouveau code parent</label>' +
+      '<input type="tel" inputmode="numeric" maxlength="6" id="reset-newpin">' +
+      '<button class="btn" id="reset-confirm-btn" style="margin-top:14px;">Valider</button>' +
+      '<button class="pin-box switch" id="reset-back-btn">Retour</button>' +
+      '<div class="notice error" id="reset-error" hidden></div>' +
+      '</div>';
+    $('reset-confirm-btn').onclick = async () => {
+      const resetCode = $('reset-code').value.trim();
+      const newPin = $('reset-newpin').value.trim();
+      if (!/^\d{4,6}$/.test(newPin)) {
+        $('reset-error').hidden = false;
+        $('reset-error').textContent = 'Le nouveau code doit contenir 4 à 6 chiffres.';
+        return;
+      }
+      const btn = $('reset-confirm-btn');
+      btn.disabled = true; btn.textContent = 'Validation...';
+      try {
+        await callFn('teen-parent', { action: 'reset', resetCode, newPin, sessionToken: localStorage.getItem(SESSION_KEY) });
+        parentUnlocked = true;
+        sessionStorage.setItem('teen_parent_unlocked', '1');
+        renderParent();
+      } catch(e) {
+        btn.disabled = false; btn.textContent = 'Valider';
+        $('reset-error').hidden = false;
+        $('reset-error').textContent = e.code === 'wrong_code' ? 'Code incorrect.'
+          : e.code === 'expired_or_invalid' ? 'Code expiré — redemande-en un.'
+          : "Erreur — réessaie.";
+      }
+    };
+    $('reset-back-btn').onclick = () => renderParentLock(v);
   }
 
   async function renderParentDashboard(v){
@@ -1579,6 +1632,8 @@
       '<div class="parent-header"><h2>Espace parent</h2>' +
         '<button class="link-btn" id="btn-change-pin">Code parent</button>' +
       '</div>' +
+      '<button class="link-btn" id="btn-manage-billing" style="display:block; margin:2px 0 20px;">Gérer mon abonnement</button>' +
+      '<div class="notice error" id="billing-portal-error" hidden></div>' +
       '<div class="chips" style="margin-bottom:20px;">' +
         '<button class="chip selected" id="ptab-seances">Séances</button>' +
         '<button class="chip" id="ptab-famille">Famille</button>' +
@@ -1599,6 +1654,30 @@
       '</div>';
 
     $('btn-change-pin').onclick = renderChangePin;
+
+    $('btn-manage-billing').onclick = async () => {
+      const btn = $('btn-manage-billing');
+      const errEl = $('billing-portal-error');
+      errEl.hidden = true;
+      btn.disabled = true;
+      const original = btn.textContent;
+      btn.textContent = 'Ouverture...';
+      const sessionToken = localStorage.getItem(SESSION_KEY);
+      try {
+        const res = await callFn('teen-billing', { action: 'portal', sessionToken });
+        if (res.url) { window.location.href = res.url; return; }
+        throw new Error('no_url');
+      } catch(e) {
+        errEl.hidden = false;
+        errEl.textContent = e.code === 'not_owner'
+          ? "C'est " + (e.ownerEmail || 'le compte principal') + " qui gère l'abonnement — demande-lui de s'en occuper depuis son propre compte."
+          : e.code === 'no_subscription'
+            ? "Aucun abonnement actif trouvé sur ce compte."
+            : "Impossible d'ouvrir la gestion de l'abonnement — réessaie dans un instant.";
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    };
 
     function showPtab(name){
       $('ptab-seances').classList.toggle('selected', name === 'seances');
@@ -1675,8 +1754,8 @@
     const list = $('parent-seances-list');
     list.innerHTML = '<div class="loading"><span class="spinner"></span> chargement...</div>';
     try {
-      const { data: seances, error } = await sb.from('teen_seances').select('*').order('created_at', { ascending: false }).limit(50);
-      if (error) throw error;
+      const res = await callFn('teen-seances', { action: 'list_family', sessionToken: localStorage.getItem(SESSION_KEY) });
+      const seances = res.seances;
       if (!seances || !seances.length) {
         list.innerHTML = '<div class="empty-state"><span class="icon"><svg width="32" height="32" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5 H20 A2 2 0 0 1 22 7 V23 H8 A2 2 0 0 1 6 21 Z"/><path d="M6 21 A2 2 0 0 1 8 19 H22"/><path d="M10 9 H18 M10 13 H18"/></svg></span>Aucune séance enregistrée pour l\'instant.</div>';
         return;
