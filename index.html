@@ -213,7 +213,7 @@
   input.matiere-autre{margin-top:10px; width:100%; padding:12px 14px; border-radius:11px; border:1px solid var(--line); background:var(--paper-raised); color:var(--ink); font-size:1rem;}
 
   .dropzone{border:1.5px dashed var(--line); border-radius:16px; padding:26px; text-align:center; cursor:pointer; background:var(--paper-raised); position:relative;}
-  .dropzone .icon{font-size:2.1rem; display:block; margin-bottom:8px;}
+  .dropzone .icon{display:block; margin-bottom:8px; color:var(--muted);}
   .dropzone .label{font-weight:600; font-size:1rem;}
   .dropzone .sub{color:var(--muted); font-size:.88rem; margin-top:4px;}
   .dropzone input[type=file]{position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;}
@@ -342,7 +342,7 @@
   <nav>
     <button id="tab-new" class="active">Nouvelle séance</button>
     <button id="tab-history">Historique</button>
-    <button id="tab-parent">🔒 Parent</button>
+    <button id="tab-parent">Parent</button>
   </nav>
 </header>
 
@@ -379,15 +379,15 @@
     <div class="field">
       <label>Tu as une photo du cours ?</label>
       <div class="chips" id="chips-mode">
-        <button class="chip selected" data-mode="photo">📷 Oui, j'ai une photo</button>
-        <button class="chip" data-mode="sujet">💬 Non, juste un sujet</button>
+        <button class="chip selected" data-mode="photo">Oui, j'ai une photo</button>
+        <button class="chip" data-mode="sujet">Non, juste un sujet</button>
       </div>
     </div>
 
     <div class="field" id="field-photo">
       <label>Photo du cours ou des notes</label>
       <div class="dropzone" id="dropzone">
-        <span class="icon">📷</span>
+        <span class="icon"><svg width="34" height="34" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 8 L11 5 H17 L19 8 H23 A2 2 0 0 1 25 10 V21 A2 2 0 0 1 23 23 H5 A2 2 0 0 1 3 21 V10 A2 2 0 0 1 5 8 Z"/><circle cx="14" cy="15" r="4.5"/></svg></span>
         <span class="label">Ajouter une photo</span>
         <span class="sub">cahier, poly, notes de classe...</span>
         <input type="file" accept="image/*" capture="environment" id="photo-input">
@@ -425,7 +425,7 @@
 
 <div id="profile-gate" class="profile-gate" hidden>
   <div class="pin-box">
-    <div class="icon">👋</div>
+    <div class="icon"><svg width="40" height="40" viewBox="0 0 28 28" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="11"/><path d="M9 12.5 Q14 8 19 12.5" stroke-width="1.8"/><path d="M9.5 17 Q14 20.5 18.5 17"/></svg></div>
     <h2 id="profile-gate-title">Avant de commencer</h2>
     <p class="hint">Ça permet à 67 TEEN d'adapter ses explications à ton niveau, et de garder ton historique bien séparé de celui des autres.</p>
     <label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;text-align:left;">Prénom</label>
@@ -523,10 +523,10 @@
       const exemple = /^exemple\s*:/i.exec(p);
       const retenir = /^(à|a) retenir\s*:/i.exec(p);
       if (exemple) {
-        return '<div class="callout callout-exemple"><span class="callout-label">💡 Exemple</span><p>' + escapeHtml(p.slice(exemple[0].length).trim()) + '</p></div>';
+        return '<div class="callout callout-exemple"><span class="callout-label">Exemple</span><p>' + escapeHtml(p.slice(exemple[0].length).trim()) + '</p></div>';
       }
       if (retenir) {
-        return '<div class="callout callout-retenir"><span class="callout-label">📌 À retenir</span><p>' + escapeHtml(p.slice(retenir[0].length).trim()) + '</p></div>';
+        return '<div class="callout callout-retenir"><span class="callout-label">À retenir</span><p>' + escapeHtml(p.slice(retenir[0].length).trim()) + '</p></div>';
       }
       return '<p>' + escapeHtml(p) + '</p>';
     }).join('');
@@ -565,7 +565,7 @@
     const pill = $('profile-pill');
     if (p) {
       pill.hidden = false;
-      pill.textContent = '👤 ' + (p.prenom ? p.prenom + ' · ' : '') + (p.classe || 'profil');
+      pill.textContent = (p.prenom ? p.prenom + ' · ' : '') + (p.classe || 'profil');
     } else {
       pill.hidden = true;
     }
@@ -792,8 +792,8 @@
                 '<div class="landing-phone-head">Maths · les fractions</div>' +
                 '<div class="phone-card rich-text">' +
                   '<p>Pour simplifier une fraction, on divise le numérateur et le dénominateur par le même nombre.</p>' +
-                  '<div class="callout callout-exemple"><span class="callout-label">💡 Exemple</span><p><span class="step-part">$\\frac{6}{8}$</span><span class="step-part">$= \\frac{6 \\div 2}{8 \\div 2}$</span><span class="step-part">$= \\frac{3}{4}$</span></p></div>' +
-                  '<div class="callout callout-retenir"><span class="callout-label">📌 À retenir</span><p>on ne peut additionner deux fractions que si elles ont le même dénominateur.</p></div>' +
+                  '<div class="callout callout-exemple"><span class="callout-label">Exemple</span><p><span class="step-part">$\\frac{6}{8}$</span><span class="step-part">$= \\frac{6 \\div 2}{8 \\div 2}$</span><span class="step-part">$= \\frac{3}{4}$</span></p></div>' +
+                  '<div class="callout callout-retenir"><span class="callout-label">À retenir</span><p>on ne peut additionner deux fractions que si elles ont le même dénominateur.</p></div>' +
                 '</div>' +
               '</div>' +
             '</div>' +
@@ -866,7 +866,7 @@
   function renderGateLoginForm(defaultEmail){
     $('app-gate').innerHTML =
       '<div class="pin-box">' +
-        '<div class="icon">✉️</div>' +
+        '<div class="icon"><svg width="40" height="40" viewBox="0 0 28 28" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="22" height="16" rx="2.5"/><path d="M4 8 L14 16 L24 8"/></svg></div>' +
         '<h2>Connexion</h2>' +
         '<p class="hint">Entre ton email, on t’envoie un lien de connexion.</p>' +
         '<input type="email" class="gate-input" id="gate-email2" placeholder="ton@email.fr" value="' + escapeHtml(defaultEmail || '') + '">' +
@@ -881,7 +881,7 @@
       btn.disabled = true; btn.textContent = 'Envoi...';
       try {
         await callFn('teen-auth', { action: 'request_link', email });
-        renderGateMessage('Vérifie ta boîte mail 📬', 'On vient d’envoyer un lien de connexion à ' + email + '. Clique dessus pour entrer.');
+        renderGateMessage('Vérifie ta boîte mail', 'On vient d’envoyer un lien de connexion à ' + email + '. Clique dessus pour entrer.');
       } catch(e) {
         btn.disabled = false; btn.textContent = 'Recevoir le lien';
         showGateError("Impossible d'envoyer le lien — réessaie.");
@@ -893,7 +893,7 @@
   function renderGateMessage(title, text, showResubscribe){
     $('app-gate').innerHTML =
       '<div class="pin-box">' +
-        '<div class="icon">📬</div>' +
+        '<div class="icon"><svg width="40" height="40" viewBox="0 0 28 28" fill="none" stroke="var(--good)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="22" height="16" rx="2.5"/><path d="M4 8 L14 16 L24 8"/></svg></div>' +
         '<h2>' + escapeHtml(title) + '</h2>' +
         '<p class="hint">' + escapeHtml(text) + '</p>' +
         (showResubscribe ? '<button class="btn" id="gate-resub-btn" style="margin-top:14px;">S’abonner</button>' : '') +
@@ -931,7 +931,7 @@
       history.replaceState({}, '', window.location.pathname);
       try {
         await callFn('teen-auth', { action: 'request_link', email: checkoutEmail });
-        renderGateMessage('Votre essai gratuit commence 🎉', 'Vérifiez votre boîte mail (' + checkoutEmail + ') pour vous connecter — 7 jours gratuits, résiliable à tout moment.');
+        renderGateMessage('Votre essai gratuit commence', 'Vérifiez votre boîte mail (' + checkoutEmail + ') pour vous connecter — 7 jours gratuits, résiliable à tout moment.');
         return;
       } catch(e) {
         renderGateLanding(checkoutEmail, 'Paiement reçu, mais l’envoi du lien a échoué — réessaie de te connecter.');
@@ -1149,7 +1149,6 @@
     const dateStr = new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
     v.innerHTML =
       photoHtml +
-      '<button class="btn secondary btn-print reveal" id="btn-print-fiche">🖨️ Imprimer la fiche</button>' +
       '<div id="fiche-print-area">' +
         '<div class="print-only-title">67 TEEN — Fiche de révision</div>' +
         '<div class="print-subtitle">' + escapeHtml(draft.matiere || 'Matière') + ' · ' + dateStr + '</div>' +
@@ -1460,7 +1459,7 @@
   function renderHistory(seances){
     const content = $('history-content');
     if (!seances.length) {
-      content.innerHTML = '<div class="empty-state"><span class="icon">📓</span>Aucune séance enregistrée pour l\'instant.<br>Commence par analyser un cours !</div>';
+      content.innerHTML = '<div class="empty-state"><span class="icon"><svg width="32" height="32" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5 H20 A2 2 0 0 1 22 7 V23 H8 A2 2 0 0 1 6 21 Z"/><path d="M6 21 A2 2 0 0 1 8 19 H22"/><path d="M10 9 H18 M10 13 H18"/></svg></span>Aucune séance enregistrée pour l\'instant.<br>Commence par analyser un cours !</div>';
       return;
     }
     const total = seances.length;
@@ -1515,7 +1514,7 @@
 
   function renderParentSetup(v){
     v.innerHTML =
-      '<div class="pin-box"><div class="icon">🔒</div>' +
+      '<div class="pin-box"><div class="icon"><svg width="40" height="40" viewBox="0 0 28 28" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="13" width="16" height="11" rx="2"/><path d="M9 13 V9 A5 5 0 0 1 19 9 V13"/></svg></div>' +
       '<h2>Configurer l\'accès parent</h2>' +
       '<p class="hint">Choisis un code à 4 chiffres pour retrouver le suivi des séances.</p>' +
       '<input type="tel" inputmode="numeric" maxlength="6" id="pin-new" placeholder="••••">' +
@@ -1543,7 +1542,7 @@
 
   function renderParentLock(v){
     v.innerHTML =
-      '<div class="pin-box"><div class="icon">🔒</div>' +
+      '<div class="pin-box"><div class="icon"><svg width="40" height="40" viewBox="0 0 28 28" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="13" width="16" height="11" rx="2"/><path d="M9 13 V9 A5 5 0 0 1 19 9 V13"/></svg></div>' +
       '<h2>Espace parent</h2>' +
       '<p class="hint">Entre le code pour voir le suivi des séances.</p>' +
       '<input type="tel" inputmode="numeric" maxlength="6" id="pin-check">' +
@@ -1615,7 +1614,7 @@
     try {
       const res = await callFn('teen-auth', { action: 'list_family_members', sessionToken });
       if (!res.members || !res.members.length) {
-        list.innerHTML = '<div class="empty-state"><span class="icon">👪</span>Aucun enfant ajouté pour l’instant.</div>';
+        list.innerHTML = '<div class="empty-state"><span class="icon"><svg width="32" height="32" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="3.5"/><path d="M4 22 C4 17.5 6.8 15 10 15 C13.2 15 16 17.5 16 22"/><circle cx="19" cy="11" r="3"/><path d="M15.5 22 C15.8 18.3 17.8 16.5 20 16.5 C22.7 16.5 24.5 19 24.5 22"/></svg></span>Aucun enfant ajouté pour l’instant.</div>';
         return;
       }
       list.innerHTML = res.members.map(m =>
@@ -1673,7 +1672,7 @@
       const { data: seances, error } = await sb.from('teen_seances').select('*').order('created_at', { ascending: false }).limit(50);
       if (error) throw error;
       if (!seances || !seances.length) {
-        list.innerHTML = '<div class="empty-state"><span class="icon">📓</span>Aucune séance enregistrée pour l\'instant.</div>';
+        list.innerHTML = '<div class="empty-state"><span class="icon"><svg width="32" height="32" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5 H20 A2 2 0 0 1 22 7 V23 H8 A2 2 0 0 1 6 21 Z"/><path d="M6 21 A2 2 0 0 1 8 19 H22"/><path d="M10 9 H18 M10 13 H18"/></svg></span>Aucune séance enregistrée pour l\'instant.</div>';
         return;
       }
       list.innerHTML = seances.map(s => {
@@ -1700,7 +1699,7 @@
   function renderChangePin(){
     const v = $('view-parent');
     v.innerHTML =
-      '<div class="pin-box"><div class="icon">🔒</div><h2>Changer le code</h2>' +
+      '<div class="pin-box"><div class="icon"><svg width="40" height="40" viewBox="0 0 28 28" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="13" width="16" height="11" rx="2"/><path d="M9 13 V9 A5 5 0 0 1 19 9 V13"/></svg></div><h2>Changer le code</h2>' +
       '<label style="display:block;font-size:.85rem;font-weight:700;margin-bottom:6px;">Code actuel</label>' +
       '<input type="tel" inputmode="numeric" maxlength="6" id="pin-old">' +
       '<label style="display:block;font-size:.85rem;font-weight:700;margin:14px 0 6px;">Nouveau code</label>' +
