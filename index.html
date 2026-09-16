@@ -56,12 +56,12 @@
   :focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 
   /* ---- mouvement : discret, jamais décoratif ---- */
-  button, .chip, .qcm-option, .seance, .bulletin-row, input, textarea, select {
+  button, .chip, .qcm-option, .seance, input, textarea, select {
     transition: background-color .16s ease, border-color .16s ease, color .16s ease, transform .1s ease, box-shadow .16s ease;
   }
   .btn:active, .chip:active, .qcm-option:not(:disabled):active, .link-btn:active { transform: scale(.97); }
-  .seance, .bulletin-row { transition: background-color .16s ease, border-color .16s ease, transform .12s ease; }
-  .seance:active, .bulletin-row:active { transform: scale(.99); }
+  .seance { transition: background-color .16s ease, border-color .16s ease, transform .12s ease; }
+  .seance:active { transform: scale(.99); }
   @keyframes riseIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   .reveal { animation: riseIn .32s ease both; }
   .reveal-1 { animation-delay: .04s; }
@@ -235,18 +235,7 @@
   .pin-box .btn{margin-top:14px;}
   .pin-box .switch{margin-top:16px; font-size:.82rem; color:var(--muted); background:none; border:none; text-decoration:underline; cursor:pointer;}
 
-  .bulletin-row{background:var(--paper-raised); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:12px; cursor:pointer;}
-  .bulletin-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
-  .bulletin-top .periode{font-weight:700;}
-  .bulletin-top .moyenne{font-family:var(--font-display); font-size:1.3rem; color:var(--accent-strong);}
-  .matiere-line{display:flex; justify-content:space-between; padding:6px 0; border-top:1px solid var(--line); font-size:.9rem;}
-  .matiere-line:first-of-type{border-top:none;}
-  .matiere-line .note{font-weight:700; font-variant-numeric:tabular-nums;}
 
-  .edit-grid{display:flex; flex-direction:column; gap:10px; margin-bottom:14px;}
-  .edit-matiere{display:grid; grid-template-columns:2fr 1fr; gap:8px; align-items:center; background:var(--paper-sunken); padding:10px; border-radius:10px;}
-  .edit-matiere input{padding:8px 10px; font-size:.88rem;}
-  .edit-matiere .note-group{display:flex; align-items:center; gap:4px; font-size:.85rem; color:var(--muted);}
   .parent-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;}
   .link-btn{background:none; border:none; color:var(--muted); font-size:.82rem; text-decoration:underline; cursor:pointer; padding:0;}
 </style>
@@ -557,7 +546,6 @@
           '<h2>Ce qui change avec 67 TEEN</h2>' +
           '<div class="landing-features">' +
             '<div class="landing-feature scroll-reveal"><span class="icon">🎯</span><span>Un quiz exigeant, pas un questionnaire qu’on réussit sans comprendre.</span></div>' +
-            '<div class="landing-feature scroll-reveal"><span class="icon">📊</span><span>Le suivi des bulletins de notes, en attendant une connexion directe à l’école.</span></div>' +
             '<div class="landing-feature scroll-reveal"><span class="icon">🔑</span><span>Un espace parent séparé, avec les séances et les scores de chaque enfant.</span></div>' +
             '<div class="landing-feature scroll-reveal"><span class="icon">🗂️</span><span>Un historique propre à chaque enfant — personne ne voit les séances des autres.</span></div>' +
           '</div>' +
@@ -568,7 +556,7 @@
             '<h2>Pensé pour rassurer les parents</h2>' +
             '<div class="landing-features">' +
               '<div class="landing-feature scroll-reveal"><span class="icon">🎯</span><span><strong>Uniquement les devoirs.</strong> Pas de chat libre, pas de réseaux, pas de sujets hors-sujet — l’IA ne répond qu’aux demandes de révision.</span></div>' +
-              '<div class="landing-feature scroll-reveal"><span class="icon">🔍</span><span><strong>Vous voyez tout.</strong> L’espace parent, protégé par votre propre code, montre les séances, les scores et les bulletins de chaque enfant.</span></div>' +
+              '<div class="landing-feature scroll-reveal"><span class="icon">🔍</span><span><strong>Vous voyez tout.</strong> L’espace parent, protégé par votre propre code, montre les séances et les scores de chaque enfant.</span></div>' +
               '<div class="landing-feature scroll-reveal"><span class="icon">🛡️</span><span><strong>Rien n’est revendu.</strong> Pas de publicité, aucune donnée partagée avec des tiers.</span></div>' +
               '<div class="landing-feature scroll-reveal"><span class="icon">🤝</span><span><strong>Vous gardez la main.</strong> C’est vous qui gérez l’abonnement, résiliable à tout moment.</span></div>' +
             '</div>' +
@@ -1195,7 +1183,7 @@
     v.innerHTML =
       '<div class="pin-box"><div class="icon">🔒</div>' +
       '<h2>Configurer l\'accès parent</h2>' +
-      '<p class="hint">Choisis un code à 4 chiffres pour retrouver le suivi des bulletins.</p>' +
+      '<p class="hint">Choisis un code à 4 chiffres pour retrouver le suivi des séances.</p>' +
       '<input type="tel" inputmode="numeric" maxlength="6" id="pin-new" placeholder="••••">' +
       '<button class="btn" id="pin-setup-btn">Créer le code</button>' +
       '<div class="notice error" id="pin-setup-error" hidden></div>' +
@@ -1223,7 +1211,7 @@
     v.innerHTML =
       '<div class="pin-box"><div class="icon">🔒</div>' +
       '<h2>Espace parent</h2>' +
-      '<p class="hint">Entre le code pour voir le suivi des bulletins.</p>' +
+      '<p class="hint">Entre le code pour voir le suivi des séances.</p>' +
       '<input type="tel" inputmode="numeric" maxlength="6" id="pin-check">' +
       '<button class="btn" id="pin-check-btn">Déverrouiller</button>' +
       '<div class="notice error" id="pin-check-error" hidden></div>' +
@@ -1253,20 +1241,10 @@
         '<button class="link-btn" id="btn-change-pin">Code parent</button>' +
       '</div>' +
       '<div class="chips" style="margin-bottom:20px;">' +
-        '<button class="chip selected" id="ptab-bulletins">Bulletins</button>' +
-        '<button class="chip" id="ptab-seances">Séances</button>' +
+        '<button class="chip selected" id="ptab-seances">Séances</button>' +
         '<button class="chip" id="ptab-famille">Famille</button>' +
       '</div>' +
-      '<div id="parent-bulletins-view">' +
-        '<p class="hint">Photographie le bulletin si l\'école ne propose pas de connexion automatique.</p>' +
-        '<div class="dropzone" id="bulletin-dropzone"><span class="icon">🧾</span><span class="label">Photographier un bulletin</span> <span class="sub">toutes les notes seront relues avant d\'être enregistrées</span>' +
-        '<input type="file" accept="image/*" capture="environment" id="bulletin-input"></div>' +
-        '<div id="bulletin-loading" class="loading" hidden><span class="spinner"></span> 67 TEEN lit le bulletin...</div>' +
-        '<div id="bulletin-error" class="notice error" hidden></div>' +
-        '<div id="bulletin-review"></div>' +
-        '<div id="bulletins-list"></div>' +
-      '</div>' +
-      '<div id="parent-seances-view" hidden>' +
+      '<div id="parent-seances-view">' +
         '<p class="hint">Les séances de révision de chaque enfant, avec leurs scores.</p>' +
         '<div id="parent-seances-list"></div>' +
       '</div>' +
@@ -1282,22 +1260,18 @@
       '</div>';
 
     $('btn-change-pin').onclick = renderChangePin;
-    $('bulletin-input').addEventListener('change', handleBulletinPhoto);
 
     function showPtab(name){
-      $('ptab-bulletins').classList.toggle('selected', name === 'bulletins');
       $('ptab-seances').classList.toggle('selected', name === 'seances');
       $('ptab-famille').classList.toggle('selected', name === 'famille');
-      $('parent-bulletins-view').hidden = name !== 'bulletins';
       $('parent-seances-view').hidden = name !== 'seances';
       $('parent-famille-view').hidden = name !== 'famille';
     }
-    $('ptab-bulletins').onclick = () => showPtab('bulletins');
     $('ptab-seances').onclick = () => { showPtab('seances'); loadParentSeances(); };
     $('ptab-famille').onclick = () => { showPtab('famille'); loadFamilleMembers(); };
     $('famille-add-btn').onclick = addFamilleMember;
 
-    loadBulletins();
+    loadParentSeances();
   }
 
   async function loadFamilleMembers(){
@@ -1417,118 +1391,6 @@
         $('pin-change-error').textContent = e.code === 'wrong_old_pin' ? "Le code actuel n'est pas correct." : "Erreur — réessaie.";
       }
     };
-  }
-
-  let bulletinDraft = null;
-
-  async function handleBulletinPhoto(e){
-    const f = e.target.files && e.target.files[0];
-    if (!f) return;
-    $('bulletin-error').hidden = true;
-    $('bulletin-loading').hidden = false;
-    $('bulletin-review').innerHTML = '';
-    try {
-      const imageBase64 = await photoToJpegBase64(f);
-      const data = await callFn('teen-ai', { action: 'bulletin', imageBase64, imageMediaType: 'image/jpeg' });
-      bulletinDraft = {
-        periode: data.periode || '',
-        matieres: Array.isArray(data.matieres) ? data.matieres : [],
-        moyenne_generale: data.moyenne_generale,
-        notes_brutes: data.notes_brutes || ''
-      };
-      renderBulletinReview();
-    } catch(e) {
-      $('bulletin-error').hidden = false;
-      $('bulletin-error').textContent = "Impossible de lire cette photo — réessaie avec une image plus nette.";
-    } finally {
-      $('bulletin-loading').hidden = true;
-      $('bulletin-input').value = '';
-    }
-  }
-
-  function renderBulletinReview(){
-    const box = $('bulletin-review');
-    let rows = bulletinDraft.matieres.map((m, i) =>
-      '<div class="edit-matiere">' +
-        '<input type="text" data-i="' + i + '" data-f="matiere" value="' + escapeHtml(m.matiere || '') + '" placeholder="Matière">' +
-        '<div class="note-group"><input type="text" data-i="' + i + '" data-f="note" value="' + escapeHtml(m.note != null ? m.note : '') + '" placeholder="Note" style="width:52px;">/<input type="text" data-i="' + i + '" data-f="sur" value="' + escapeHtml(m.sur != null ? m.sur : 20) + '" placeholder="20" style="width:44px;"></div>' +
-      '</div>'
-    ).join('');
-
-    const profile = getProfile();
-    box.innerHTML =
-      '<div class="card">' +
-        '<h3>Vérifie avant d\'enregistrer</h3>' +
-        '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:6px;">Élève concerné</label>' +
-        '<input type="text" id="bulletin-eleve" value="' + escapeHtml((profile && profile.prenom) || '') + '" placeholder="Prénom" style="margin-bottom:14px;">' +
-        '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:6px;">Période</label>' +
-        '<input type="text" id="bulletin-periode" value="' + escapeHtml(bulletinDraft.periode) + '" style="margin-bottom:14px;">' +
-        '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:6px;">Moyenne générale</label>' +
-        '<input type="text" id="bulletin-moyenne" value="' + escapeHtml(bulletinDraft.moyenne_generale != null ? bulletinDraft.moyenne_generale : '') + '" style="margin-bottom:16px;">' +
-        '<div class="edit-grid" id="bulletin-matieres">' + rows + '</div>' +
-        (bulletinDraft.notes_brutes ? '<p class="hint" style="margin-top:0;">Texte non classé : ' + escapeHtml(bulletinDraft.notes_brutes) + '</p>' : '') +
-        '<div class="actions-row"><button class="btn secondary" id="bulletin-cancel">Annuler</button><button class="btn" id="bulletin-save">Enregistrer le bulletin</button></div>' +
-      '</div>';
-
-    box.querySelectorAll('.edit-matiere input').forEach(inp => {
-      inp.addEventListener('input', () => {
-        const i = Number(inp.dataset.i), f = inp.dataset.f;
-        bulletinDraft.matieres[i][f] = inp.value;
-      });
-    });
-    $('bulletin-cancel').onclick = () => { bulletinDraft = null; box.innerHTML = ''; };
-    $('bulletin-save').onclick = saveBulletin;
-  }
-
-  async function saveBulletin(){
-    const btn = $('bulletin-save');
-    btn.disabled = true; btn.textContent = 'Enregistrement...';
-    const eleve = $('bulletin-eleve').value.trim();
-    const periode = $('bulletin-periode').value.trim();
-    const moyenneRaw = $('bulletin-moyenne').value.trim();
-    const moyenne = moyenneRaw ? parseFloat(moyenneRaw.replace(',', '.')) : null;
-    try {
-      const { error } = await sb.from('teen_bulletins').insert({
-        eleve: eleve || null,
-        periode,
-        matieres: bulletinDraft.matieres,
-        moyenne_generale: isNaN(moyenne) ? null : moyenne,
-        notes_brutes: bulletinDraft.notes_brutes || ''
-      });
-      if (error) throw error;
-      bulletinDraft = null;
-      $('bulletin-review').innerHTML = '';
-      loadBulletins();
-    } catch(e) {
-      btn.disabled = false; btn.textContent = 'Enregistrer le bulletin';
-      $('bulletin-error').hidden = false;
-      $('bulletin-error').textContent = "Impossible d'enregistrer — réessaie.";
-    }
-  }
-
-  async function loadBulletins(){
-    const list = $('bulletins-list');
-    if (!list) return;
-    list.innerHTML = '<div class="loading"><span class="spinner"></span> chargement...</div>';
-    try {
-      const { data: bulletins, error } = await sb.from('teen_bulletins').select('*').order('created_at', { ascending: false }).limit(30);
-      if (error) throw error;
-      if (!bulletins || !bulletins.length) {
-        list.innerHTML = '<div class="empty-state"><span class="icon">🧾</span>Aucun bulletin enregistré pour l\'instant.</div>';
-        return;
-      }
-      list.innerHTML = bulletins.map(b => {
-        const matieresHtml = (b.matieres || []).map(m =>
-          '<div class="matiere-line"><span>' + escapeHtml(m.matiere || '') + '</span><span class="note">' + escapeHtml(m.note != null ? m.note : '—') + '/' + escapeHtml(m.sur || 20) + '</span></div>'
-        ).join('');
-        return '<div class="bulletin-row">' +
-          '<div class="bulletin-top"><span class="periode">' + (b.eleve ? escapeHtml(b.eleve) + ' — ' : '') + escapeHtml(b.periode || 'Bulletin') + '</span><span class="moyenne">' + (b.moyenne_generale != null ? b.moyenne_generale : '—') + '</span></div>' +
-          matieresHtml +
-          '</div>';
-      }).join('');
-    } catch(e) {
-      list.innerHTML = '<div class="notice error">Impossible de charger les bulletins.</div>';
-    }
   }
 
 })();
