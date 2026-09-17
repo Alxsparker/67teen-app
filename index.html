@@ -1591,7 +1591,9 @@
         }
       } catch(e) {
         $('pin-check-error').hidden = false;
-        $('pin-check-error').textContent = "Erreur — réessaie.";
+        $('pin-check-error').textContent = e.code === 'locked'
+          ? "Trop d'essais — réessaie dans 15 minutes."
+          : "Erreur — réessaie.";
       }
     };
     $('pin-forgot-btn').onclick = async () => {
@@ -1849,11 +1851,14 @@
         return;
       }
       try {
-        await callFn('teen-parent', { action: 'set', pin, oldPin });
+        const sessionToken = localStorage.getItem(SESSION_KEY);
+        await callFn('teen-parent', { action: 'set', pin, oldPin, sessionToken });
         renderParent();
       } catch(e) {
         $('pin-change-error').hidden = false;
-        $('pin-change-error').textContent = e.code === 'wrong_old_pin' ? "Le code actuel n'est pas correct." : "Erreur — réessaie.";
+        $('pin-change-error').textContent = e.code === 'wrong_old_pin' ? "Le code actuel n'est pas correct."
+          : e.code === 'locked' ? "Trop d'essais — réessaie dans 15 minutes."
+          : "Erreur — réessaie.";
       }
     };
   }
