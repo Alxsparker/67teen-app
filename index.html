@@ -557,6 +557,7 @@
   function copyForFnError(code){
     switch(code){
       case 'unknown_action': return "Une erreur interne est survenue — réessaie.";
+      case 'not_authenticated': return "Ta session a expiré — reconnecte-toi pour continuer.";
       default: return "Un problème est survenu pendant l'analyse — réessaie dans un instant.";
     }
   }
@@ -1097,7 +1098,7 @@
     const moyenneActuelle = moyenneRaw ? parseFloat(moyenneRaw.replace(',', '.')) : null;
 
     try {
-      const payload = { action: 'analyser', matiere };
+      const payload = { action: 'analyser', matiere, sessionToken: localStorage.getItem(SESSION_KEY) };
       const profile = getProfile();
       if (profile && profile.classe) {
         payload.niveau = profile.classe + (profile.age ? ' (' + profile.age + ' ans)' : '');
@@ -1228,6 +1229,7 @@
       try {
         const data = await callFn('teen-ai', {
           action: 'question',
+          sessionToken: localStorage.getItem(SESSION_KEY),
           resume: draft.resume,
           reexplication: draft.reexplication,
           niveau: currentNiveau(),
@@ -1356,6 +1358,7 @@
       const previousQuestions = draft.attempts.flatMap(a => a.questions.map(q => q.question));
       const data = await callFn('teen-ai', {
         action: 'quiz',
+        sessionToken: localStorage.getItem(SESSION_KEY),
         resume: draft.resume, reexplication: draft.reexplication,
         niveau: currentNiveau(), previousQuestions
       });
@@ -1395,6 +1398,7 @@
       try {
         const data = await callFn('teen-ai', {
           action: 'synthese',
+          sessionToken: localStorage.getItem(SESSION_KEY),
           resume: draft.resume, reexplication: draft.reexplication,
           niveau: currentNiveau(), missed
         });
