@@ -1647,6 +1647,7 @@
         $('reset-error').hidden = false;
         $('reset-error').textContent = e.code === 'wrong_code' ? 'Code incorrect.'
           : e.code === 'expired_or_invalid' ? 'Code expiré — redemande-en un.'
+          : e.code === 'locked' ? "Trop d'essais — réessaie dans 15 minutes."
           : "Erreur — réessaie.";
       }
     };
