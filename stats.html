@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Statistiques — 67 TEEN</title>
+<link rel="icon" href="favicon.png">
+<link rel="stylesheet" href="legal.css">
+<style>
+  .stat-grid{display:flex; gap:16px; flex-wrap:wrap; margin:24px 0 40px;}
+  .stat-card{flex:1 1 200px; background:var(--paper-raised); border:1px solid var(--line); border-radius:14px; padding:20px 22px;}
+  .stat-card .num{font-family:var(--font-display); font-weight:700; font-size:2.4rem; color:var(--accent-strong); line-height:1;}
+  .stat-card .lbl{color:var(--muted); font-size:.85rem; margin-top:6px;}
+  table{width:100%; border-collapse:collapse; margin:0 0 32px; font-size:.92rem;}
+  th{text-align:left; color:var(--muted); font-weight:600; font-size:.8rem; text-transform:uppercase; letter-spacing:.04em; padding:8px 10px; border-bottom:1px solid var(--line);}
+  td{padding:8px 10px; border-bottom:1px solid var(--line);}
+  tr:last-child td{border-bottom:none;}
+  .empty{color:var(--muted); font-style:italic;}
+  #loading{color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="legal-wrap">
+  <div class="legal-top">
+    <a class="legal-brand" href="/">67 TEEN</a>
+    <a class="legal-back" href="/">&larr; Retour au site</a>
+  </div>
+
+  <h1>Statistiques de visite</h1>
+  <p class="legal-updated">Nombre de visites anonymes — aucune donnée personnelle n'est suivie.</p>
+
+  <div id="loading">Chargement...</div>
+  <div id="content" hidden>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="num" id="stat-total">–</div><div class="lbl">Visites au total</div></div>
+      <div class="stat-card"><div class="num" id="stat-7d">–</div><div class="lbl">Sur les 7 derniers jours</div></div>
+    </div>
+
+    <h2>Par jour (14 derniers jours)</h2>
+    <table id="table-days"><thead><tr><th>Jour</th><th>Visites</th></tr></thead><tbody></tbody></table>
+
+    <h2>Par page (14 derniers jours)</h2>
+    <table id="table-paths"><thead><tr><th>Page</th><th>Visites</th></tr></thead><tbody></tbody></table>
+  </div>
+
+  <div class="legal-nav">
+    <a href="mentions-legales.html">Mentions légales</a>
+    <a href="cgv.html">Conditions générales de vente</a>
+    <a href="confidentialite.html">Politique de confidentialité</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  const FN_URL = 'https://ukwtqmicldxkifjicmbi.supabase.co/functions/v1/teen-stats';
+  const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrd3RxbWljbGR4a2lmamljbWJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc1NTgsImV4cCI6MjA5MzczMzU1OH0.j9DVTK1xSQ6xecsMfqTEBNsBP5zKDVKBmjXJSk74crQ';
+
+  function esc(s){ const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
+
+  fetch(FN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ANON_KEY, 'apikey': ANON_KEY },
+    body: JSON.stringify({ action: 'summary' })
+  })
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById('loading').hidden = true;
+    document.getElementById('content').hidden = false;
+    document.getElementById('stat-total').textContent = data.total ?? 0;
+    document.getElementById('stat-7d').textContent = data.last7 ?? 0;
+
+    const days = Object.keys(data.byDay || {}).sort().reverse();
+    const daysBody = document.querySelector('#table-days tbody');
+    daysBody.innerHTML = days.length
+      ? days.map(d => '<tr><td>' + esc(d) + '</td><td>' + esc(data.byDay[d]) + '</td></tr>').join('')
+      : '<tr><td colspan="2" class="empty">Aucune visite pour l\'instant.</td></tr>';
+
+    const paths = Object.keys(data.byPath || {}).sort((a,b) => data.byPath[b] - data.byPath[a]);
+    const pathsBody = document.querySelector('#table-paths tbody');
+    pathsBody.innerHTML = paths.length
+      ? paths.map(p => '<tr><td>' + esc(p) + '</td><td>' + esc(data.byPath[p]) + '</td></tr>').join('')
+      : '<tr><td colspan="2" class="empty">Aucune visite pour l\'instant.</td></tr>';
+  })
+  .catch(() => {
+    document.getElementById('loading').textContent = "Impossible de charger les statistiques — réessaie.";
+  });
+})();
+</script>
+</body>
+</html>

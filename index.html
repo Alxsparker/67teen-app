@@ -472,6 +472,20 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrd3RxbWljbGR4a2lmamljbWJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc1NTgsImV4cCI6MjA5MzczMzU1OH0.j9DVTK1xSQ6xecsMfqTEBNsBP5zKDVKBmjXJSk74crQ';
   const FN_URL = SUPABASE_URL + '/functions/v1/';
 
+  // Compteur de visites anonyme (aucune donnée personnelle) — juste la page
+  // et l'heure, visible sur 67teen.fr/stats. keepalive fait survivre la
+  // requête à un changement de page, comme sendBeacon, mais sans envoyer
+  // de cookies (qui bloqueraient la réponse ici).
+  try {
+    fetch(FN_URL + 'teen-stats', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'track', path: location.pathname }),
+      keepalive: true,
+      credentials: 'omit',
+    }).catch(() => {});
+  } catch(e) { /* pas grave si ça échoue */ }
+
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   async function callFn(name, payload){
