@@ -306,6 +306,13 @@
   .stat{background:var(--paper-raised); border:1px solid var(--line); border-radius:14px; padding:16px 12px; text-align:center;}
   .stat .val{font-family:var(--font-display); font-size:1.65rem; font-weight:600;}
   .stat .lbl{font-size:.76rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-top:3px;}
+  .eleve-heading{font-family:var(--font-display); font-size:1.15rem; font-weight:600; margin:20px 0 10px;}
+  .eleve-heading:first-child{margin-top:0;}
+  .attendance-card{background:var(--paper-raised); border:1px solid var(--line); border-radius:14px; padding:14px 16px 8px; margin-bottom:14px;}
+  .attendance-caption{color:var(--muted); font-size:.82rem; margin:0 0 8px;}
+  .attendance-bar{fill:var(--accent);}
+  .attendance-baseline{stroke:var(--line); stroke-width:1;}
+  .attendance-label{fill:var(--muted); font-size:9px; font-family:var(--font-body);}
 
   .seance{background:var(--paper-raised); border:1px solid var(--line); border-radius:14px; padding:18px 18px; margin-bottom:12px; cursor:pointer;}
   .seance-top{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:7px;}
@@ -1895,6 +1902,63 @@
     } catch(e) { /* silencieux, l'utilisateur peut réessayer */ }
   }
 
+  // Compte les séances d'un enfant semaine par semaine (semaines calées sur
+  // le lundi), pour dessiner la courbe d'assiduité — pensée pour rassurer
+  // un parent qui veut voir si son ado utilise l'app régulièrement.
+  function attendanceWeeklyBuckets(seances, weeks){
+    function mondayOf(d){
+      const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+      return x;
+    }
+    const thisMonday = mondayOf(new Date());
+    const buckets = [];
+    for (let i = weeks - 1; i >= 0; i--) {
+      const start = new Date(thisMonday); start.setDate(start.getDate() - i * 7);
+      const end = new Date(start); end.setDate(end.getDate() + 7);
+      buckets.push({ start, end, count: 0 });
+    }
+    seances.forEach(s => {
+      const d = new Date(s.created_at);
+      if (isNaN(d)) return;
+      const b = buckets.find(b => d >= b.start && d < b.end);
+      if (b) b.count++;
+    });
+    return buckets;
+  }
+
+  function renderAttendanceChart(seances){
+    const weeks = 6;
+    const buckets = attendanceWeeklyBuckets(seances, weeks);
+    const max = Math.max(1, ...buckets.map(b => b.count));
+    const W = 280, H = 60, padTop = 6, padBottom = 16, gap = 8;
+    const barW = (W - gap * (buckets.length - 1)) / buckets.length;
+    const baselineY = H - padBottom;
+    const usableH = baselineY - padTop;
+    const bars = buckets.map((b, i) => {
+      const x = i * (barW + gap);
+      const startStr = b.start.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
+      const label = 'Semaine du ' + startStr + ' : ' + b.count + ' séance' + (b.count > 1 ? 's' : '');
+      if (b.count <= 0) {
+        return '<rect class="attendance-bar" x="' + x.toFixed(1) + '" y="' + (baselineY - 1).toFixed(1) + '" width="' + barW.toFixed(1) + '" height="1" opacity=".3"><title>' + escapeHtml(label) + '</title></rect>';
+      }
+      const h = Math.max(4, (b.count / max) * usableH);
+      const y = baselineY - h;
+      return '<rect class="attendance-bar" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="3"><title>' + escapeHtml(label) + '</title></rect>';
+    }).join('');
+    const firstLabel = buckets[0].start.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
+    const totalRecent = buckets.reduce((s, b) => s + b.count, 0);
+    return '<div class="attendance-card">' +
+      '<p class="attendance-caption">' + totalRecent + ' séance' + (totalRecent > 1 ? 's' : '') + ' sur les ' + weeks + ' dernières semaines</p>' +
+      '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="' + H + '" role="img" aria-label="Séances par semaine, de ' + escapeHtml(firstLabel) + ' à aujourd\'hui">' +
+        bars +
+        '<line class="attendance-baseline" x1="0" y1="' + baselineY + '" x2="' + W + '" y2="' + baselineY + '"/>' +
+        '<text class="attendance-label" x="2" y="' + (H - 2) + '">' + escapeHtml(firstLabel) + '</text>' +
+        '<text class="attendance-label" x="' + (W - 2) + '" y="' + (H - 2) + '" text-anchor="end">aujourd\'hui</text>' +
+      '</svg>' +
+    '</div>';
+  }
+
   async function loadParentSeances(){
     const list = $('parent-seances-list');
     list.innerHTML = '<div class="loading"><span class="spinner"></span> chargement...</div>';
@@ -1905,18 +1969,29 @@
         list.innerHTML = '<div class="empty-state"><span class="icon"><svg width="32" height="32" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5 H20 A2 2 0 0 1 22 7 V23 H8 A2 2 0 0 1 6 21 Z"/><path d="M6 21 A2 2 0 0 1 8 19 H22"/><path d="M10 9 H18 M10 13 H18"/></svg></span>Aucune séance enregistrée pour l\'instant.</div>';
         return;
       }
-      list.innerHTML = seances.map(s => {
-        const d = new Date(s.created_at);
-        const dateStr = isNaN(d) ? '' : d.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
-        const scoreStr = (typeof s.score === 'number' && typeof s.total === 'number') ? (s.score + '/' + s.total) : '—';
-        const tentStr = s.tentatives ? ' · ' + s.tentatives + ' tentative' + (s.tentatives > 1 ? 's' : '') : '';
-        const moyStr = (typeof s.moyenne_declaree === 'number') ? 'Moyenne déclarée par l’élève : ' + s.moyenne_declaree + '/20' : '';
-        return '<div class="seance">' +
-          '<div class="seance-top"><span class="matiere">' + escapeHtml(s.eleve || 'Élève') + ' — ' + escapeHtml(s.matiere || 'Matière') + '</span><span class="date">' + dateStr + '</span></div>' +
-          '<div class="seance-top"><p class="seance-excerpt">' + escapeHtml(s.resume || '') + '</p><span class="seance-score">' + scoreStr + tentStr + '</span></div>' +
-          (moyStr ? '<p class="seance-excerpt" style="margin-top:4px;font-size:.8rem;">' + escapeHtml(moyStr) + '</p>' : '') +
-          (s.synthese_finale ? '<div class="seance-full" hidden><strong>À retravailler :</strong> ' + escapeHtml(s.synthese_finale) + '</div>' : '') +
-          '</div>';
+      const byEleve = {};
+      const order = [];
+      seances.forEach(s => {
+        const nom = s.eleve || 'Élève';
+        if (!byEleve[nom]) { byEleve[nom] = []; order.push(nom); }
+        byEleve[nom].push(s);
+      });
+      list.innerHTML = order.map(nom => {
+        const seancesEleve = byEleve[nom];
+        const itemsHtml = seancesEleve.map(s => {
+          const d = new Date(s.created_at);
+          const dateStr = isNaN(d) ? '' : d.toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
+          const scoreStr = (typeof s.score === 'number' && typeof s.total === 'number') ? (s.score + '/' + s.total) : '—';
+          const tentStr = s.tentatives ? ' · ' + s.tentatives + ' tentative' + (s.tentatives > 1 ? 's' : '') : '';
+          const moyStr = (typeof s.moyenne_declaree === 'number') ? 'Moyenne déclarée par l’élève : ' + s.moyenne_declaree + '/20' : '';
+          return '<div class="seance">' +
+            '<div class="seance-top"><span class="matiere">' + escapeHtml(s.matiere || 'Matière') + '</span><span class="date">' + dateStr + '</span></div>' +
+            '<div class="seance-top"><p class="seance-excerpt">' + escapeHtml(s.resume || '') + '</p><span class="seance-score">' + scoreStr + tentStr + '</span></div>' +
+            (moyStr ? '<p class="seance-excerpt" style="margin-top:4px;font-size:.8rem;">' + escapeHtml(moyStr) + '</p>' : '') +
+            (s.synthese_finale ? '<div class="seance-full" hidden><strong>À retravailler :</strong> ' + escapeHtml(s.synthese_finale) + '</div>' : '') +
+            '</div>';
+        }).join('');
+        return '<h3 class="eleve-heading">' + escapeHtml(nom) + '</h3>' + renderAttendanceChart(seancesEleve) + itemsHtml;
       }).join('');
       list.querySelectorAll('.seance').forEach(el => {
         el.addEventListener('click', () => { const full = el.querySelector('.seance-full'); if (full) full.hidden = !full.hidden; });
