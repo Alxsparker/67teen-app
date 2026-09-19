@@ -980,26 +980,45 @@
 
     if (loginToken) {
       history.replaceState({}, '', window.location.pathname);
-      try {
-        const res = await callFn('teen-auth', { action: 'verify_link', token: loginToken });
-        if (res.ok) {
-          localStorage.setItem(SESSION_KEY, res.sessionToken);
-          if (res.status === 'active' || res.status === 'free') { $('app-gate').hidden = true; enterApp(res.isOwner); return; }
-          if (!res.isOwner) {
-            renderGateMessage('Abonnement inactif', 'L’abonnement de ta famille n’est plus actif — demande à la personne qui le gère de vérifier son moyen de paiement.', null);
-          } else if (res.hasStripeCustomer) {
-            renderGateMessage('Abonnement inactif', 'Il y a peut-être eu un souci avec le paiement — vérifie ton moyen de paiement.', { type: 'portal', sessionToken: res.sessionToken });
-          } else {
-            renderGateMessage('Abonnement inactif', 'Ton compte existe mais l’abonnement n’est pas actif.', { type: 'new' });
+      // On n'appelle pas verify_link tout de suite au chargement de la page :
+      // certains systèmes de messagerie (filtres anti-phishing des
+      // entreprises, protections de certains fournisseurs mail) ouvrent
+      // automatiquement les liens reçus par email pour les vérifier, AVANT
+      // même que la personne ne clique. Comme ce lien ne sert qu'une seule
+      // fois, ce genre de vérification automatique le "grillait" — la vraie
+      // personne cliquait ensuite sur un lien déjà utilisé, et retombait sur
+      // la page d'accueil. En demandant un vrai clic ici, on s'assure que
+      // c'est bien un humain qui valide la connexion.
+      $('app-gate').innerHTML =
+        '<div class="pin-box">' +
+          '<div class="icon"><svg width="40" height="40" viewBox="0 0 28 28" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="22" height="16" rx="2.5"/><path d="M4 8 L14 16 L24 8"/></svg></div>' +
+          '<h2>Ton lien de connexion est prêt</h2>' +
+          '<p class="hint">Clique ci-dessous pour te connecter.</p>' +
+          '<button class="btn" id="gate-confirm-login-btn" style="margin-top:14px;">Me connecter</button>' +
+        '</div>';
+      $('gate-confirm-login-btn').onclick = async () => {
+        const btn = $('gate-confirm-login-btn');
+        btn.disabled = true; btn.textContent = 'Connexion...';
+        try {
+          const res = await callFn('teen-auth', { action: 'verify_link', token: loginToken });
+          if (res.ok) {
+            localStorage.setItem(SESSION_KEY, res.sessionToken);
+            if (res.status === 'active' || res.status === 'free') { $('app-gate').hidden = true; enterApp(res.isOwner); return; }
+            if (!res.isOwner) {
+              renderGateMessage('Abonnement inactif', 'L’abonnement de ta famille n’est plus actif — demande à la personne qui le gère de vérifier son moyen de paiement.', null);
+            } else if (res.hasStripeCustomer) {
+              renderGateMessage('Abonnement inactif', 'Il y a peut-être eu un souci avec le paiement — vérifie ton moyen de paiement.', { type: 'portal', sessionToken: res.sessionToken });
+            } else {
+              renderGateMessage('Abonnement inactif', 'Ton compte existe mais l’abonnement n’est pas actif.', { type: 'new' });
+            }
+            return;
           }
-          return;
+          renderGateLanding(null, 'Ce lien a expiré ou n’est plus valable — redemande-en un.');
+        } catch(e) {
+          renderGateLanding(null, 'Erreur de connexion — réessaie.');
         }
-        renderGateLanding(null, 'Ce lien a expiré ou n’est plus valable — redemande-en un.');
-        return;
-      } catch(e) {
-        renderGateLanding(null, 'Erreur de connexion — réessaie.');
-        return;
-      }
+      };
+      return;
     }
 
     if (checkoutStatus === 'success' && checkoutEmail) {
