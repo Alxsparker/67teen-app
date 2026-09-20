@@ -1331,7 +1331,7 @@
         '<div class="card reveal reveal-2"><h3>Ré-explication</h3><div class="rich-text">' + renderRichText(draft.reexplication) + '</div></div>' +
       '</div>' +
       '<div class="card confidence-box reveal reveal-3" id="confidence-card">' +
-        '<p style="margin:0 0 14px;">Relis si besoin — pas de pression. Une question avant de te lancer ?</p>' +
+        '<p style="margin:0 0 14px;">Relis si besoin — pas de pression. Une question sur le cours ? Tu peux demander à tout moment, avant, pendant ou après le quiz.</p>' +
         '<div id="clarifications-list"></div>' +
         '<textarea id="question-input" rows="2" placeholder="Ex : « Je n\'ai pas compris pourquoi... »" style="margin-bottom:10px;"></textarea>' +
         '<div class="actions-row" style="margin-bottom:14px;">' +
@@ -1362,7 +1362,10 @@
     $('btn-print-fiche').onclick = () => window.print();
 
     $('btn-ready-quiz').onclick = () => {
-      $('confidence-card').hidden = true;
+      // La zone de questions (confidence-card) reste affichée exprès — pour
+      // qu'on puisse continuer à poser des questions pendant et après le
+      // quiz, pas seulement avant. Seul ce bouton disparaît, devenu inutile.
+      $('btn-ready-quiz').hidden = true;
       $('quiz-section').hidden = false;
       renderQCM(draft.questions);
     };
