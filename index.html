@@ -1422,6 +1422,7 @@
         '<div class="correction-slot"></div>';
       list.appendChild(item);
     });
+    renderMathIn(list);
 
     list.querySelectorAll('.qcm-option').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1459,6 +1460,7 @@
         : '<svg class="badge" viewBox="0 0 30 26"><path d="M5,4 L25,22 M25,4 L5,22"/></svg>';
       slot.innerHTML = '<div class="correction ' + niveau + ' reveal" style="animation-delay:' + (i * .08) + 's">' + badge + '<span class="txt">' + escapeHtml(q.explication || '') + '</span></div>';
     });
+    renderMathIn($('quiz-list'));
 
     document.querySelectorAll('#quiz-list .correction .badge path').forEach((p, i) => {
       const len = p.getTotalLength();
