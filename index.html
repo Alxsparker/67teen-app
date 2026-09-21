@@ -582,6 +582,39 @@
     } catch(e) { /* pas grave, le texte brut reste lisible */ }
   }
 
+  // Sur iPhone, window.print() ne fait rien du tout dans l'icône installée
+  // sur l'écran d'accueil (Apple désactive l'impression en mode "app
+  // plein écran", sans solution de contournement côté site). On ouvre
+  // alors la fiche dans un onglet Safari normal à la place, où
+  // l'impression (et le menu de partage) fonctionnent normalement.
+  function isStandaloneApp(){
+    return window.navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  }
+
+  function openFichePourImpression(){
+    const area = $('fiche-print-area');
+    if (!area) return;
+    const html = '<!doctype html><html lang="fr"><head><meta charset="utf-8">' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+      '<title>67 TEEN — Fiche de révision</title>' +
+      '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">' +
+      '<style>' +
+        'body{font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:#000; max-width:680px; margin:0 auto; padding:28px 24px;}' +
+        '.print-only-title{font-family:Georgia, serif; font-weight:700; font-size:1.6rem; margin:0 0 4px; border-bottom:2px solid #000; padding-bottom:12px;}' +
+        '.print-subtitle{display:block; color:#555; font-size:.85rem; margin:8px 0 24px;}' +
+        '.matiere-tag{display:inline-block; border:1px solid #000; border-radius:99px; padding:5px 12px; font-size:.78rem; font-weight:700; text-transform:uppercase; margin-bottom:16px;}' +
+        '.card{margin-bottom:22px;}' +
+        '.card h3{font-size:.8rem; letter-spacing:.06em; text-transform:uppercase; border-bottom:1px solid #ccc; padding-bottom:8px; margin:0 0 12px;}' +
+        '.rich-text p{margin:0 0 12px; line-height:1.6;}' +
+        '.callout{border:1px solid #000; border-radius:8px; padding:10px 16px; margin:12px 0;}' +
+        '.callout-label{display:block; font-weight:700; font-size:.78rem; text-transform:uppercase; margin-bottom:4px;}' +
+        '.result-photo{display:none;}' +
+      '</style></head><body>' + area.innerHTML + '</body></html>';
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  }
+
   function copyForFnError(code){
     switch(code){
       case 'unknown_action': return "Une erreur interne est survenue — réessaie.";
@@ -1359,7 +1392,10 @@
 
     renderMathIn(v);
     renderClarifications();
-    $('btn-print-fiche').onclick = () => window.print();
+    $('btn-print-fiche').onclick = () => {
+      if (isStandaloneApp()) openFichePourImpression();
+      else window.print();
+    };
 
     $('btn-ready-quiz').onclick = () => {
       // La zone de questions (confidence-card) reste affichée exprès — pour
