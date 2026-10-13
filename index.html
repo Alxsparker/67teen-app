@@ -976,8 +976,8 @@
     if ('IntersectionObserver' in window) {
       const signupObserver = new IntersectionObserver((entries) => {
         if (entries.some(e => e.isIntersecting)) { trackEvent('formulaire_vu'); signupObserver.disconnect(); }
-      }, { threshold: 0.5 });
-      signupObserver.observe($('landing-signup'));
+      }, { threshold: 0.9 });
+      signupObserver.observe($('gate-subscribe-btn'));
     }
     const navCta = $('landing-nav-cta'); if (navCta) navCta.onclick = scrollToSignup;
     const heroCta = $('landing-hero-cta'); if (heroCta) heroCta.onclick = scrollToSignup;
