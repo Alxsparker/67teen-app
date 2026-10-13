@@ -36,6 +36,10 @@
       <div class="stat-card"><div class="num" id="stat-7d">–</div><div class="lbl">Sur les 7 derniers jours</div></div>
     </div>
 
+    <h2>Parcours d'inscription</h2>
+    <p class="legal-updated">Comptage démarré le jour de la mise en ligne de ce tableau. Chaque étape est comptée une fois par visite.</p>
+    <table id="table-funnel"><thead><tr><th>Étape</th><th>Depuis le début</th><th>7 derniers jours</th></tr></thead><tbody></tbody></table>
+
     <h2>Par jour (14 derniers jours)</h2>
     <table id="table-days"><thead><tr><th>Jour</th><th>Visites</th></tr></thead><tbody></tbody></table>
 
@@ -68,6 +72,21 @@
     document.getElementById('content').hidden = false;
     document.getElementById('stat-total').textContent = data.total ?? 0;
     document.getElementById('stat-7d').textContent = data.last7 ?? 0;
+
+    const steps = [
+      ['formulaire_vu', "A vu le formulaire d'inscription"],
+      ['cta_essayer', 'A cliqué sur « Essayer »'],
+      ['inscription_clic', 'A cliqué sur « Essayer gratuitement — 7 jours »'],
+      ['checkout_ouvert', 'Est arrivé sur la page de paiement Stripe'],
+      ['checkout_annule', 'Est revenu de Stripe sans payer'],
+      ['checkout_reussi', 'A terminé le paiement'],
+      ['deja_un_compte', "A cliqué sur « J'ai déjà un compte »"]
+    ];
+    const ev = data.events || {};
+    document.querySelector('#table-funnel tbody').innerHTML = steps.map(([k, label]) => {
+      const e = ev['evt:' + k] || { total: 0, last7: 0 };
+      return '<tr><td>' + esc(label) + '</td><td>' + esc(e.total) + '</td><td>' + esc(e.last7) + '</td></tr>';
+    }).join('');
 
     const days = Object.keys(data.byDay || {}).sort().reverse();
     const daysBody = document.querySelector('#table-days tbody');

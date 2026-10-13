@@ -490,6 +490,24 @@
     }).catch(() => {});
   } catch(e) { /* pas grave si ça échoue */ }
 
+  // Étapes du parcours d'inscription (même compteur anonyme que ci-dessus,
+  // préfixe "evt:") : sert à voir où les visiteurs s'arrêtent avant de
+  // payer. Chaque étape n'est comptée qu'une fois par chargement de page.
+  const trackedEvents = {};
+  function trackEvent(name){
+    if (trackedEvents[name]) return;
+    trackedEvents[name] = true;
+    try {
+      fetch(FN_URL + 'teen-stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'track', path: 'evt:' + name }),
+        keepalive: true,
+        credentials: 'omit',
+      }).catch(() => {});
+    } catch(e) { /* pas grave si ça échoue */ }
+  }
+
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   async function callFn(name, payload){
@@ -930,22 +948,37 @@
     renderMathIn($('app-gate'));
 
     $('gate-subscribe-btn').onclick = async () => {
+      trackEvent('inscription_clic');
       const email = $('gate-email').value.trim();
       if (!EMAIL_RE.test(email)) { showGateError('Entre une adresse email valide.'); return; }
       const btn = $('gate-subscribe-btn');
       btn.disabled = true; btn.textContent = 'Redirection...';
       try {
         const res = await callFn('teen-billing', { action: 'checkout', email });
-        if (res.url) { window.location.href = res.url; return; }
+        if (res.url) {
+          trackEvent('checkout_ouvert');
+          // laisse partir la requête de comptage avant de quitter la page
+          setTimeout(() => { window.location.href = res.url; }, 150);
+          return;
+        }
         throw new Error('no_url');
       } catch(e) {
         btn.disabled = false; btn.textContent = 'Essayer gratuitement — 7 jours';
         showGateError("Impossible de démarrer le paiement — réessaie.");
       }
     };
-    $('gate-login-link').onclick = () => renderGateLoginForm(defaultEmail);
+    $('gate-login-link').onclick = () => { trackEvent('deja_un_compte'); renderGateLoginForm(defaultEmail); };
 
-    const scrollToSignup = () => $('landing-signup').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const scrollToSignup = () => {
+      trackEvent('cta_essayer');
+      $('landing-signup').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+    if ('IntersectionObserver' in window) {
+      const signupObserver = new IntersectionObserver((entries) => {
+        if (entries.some(e => e.isIntersecting)) { trackEvent('formulaire_vu'); signupObserver.disconnect(); }
+      }, { threshold: 0.5 });
+      signupObserver.observe($('landing-signup'));
+    }
     const navCta = $('landing-nav-cta'); if (navCta) navCta.onclick = scrollToSignup;
     const heroCta = $('landing-hero-cta'); if (heroCta) heroCta.onclick = scrollToSignup;
   }
@@ -1112,6 +1145,7 @@
     }
 
     if (checkoutStatus === 'success' && checkoutEmail) {
+      trackEvent('checkout_reussi');
       history.replaceState({}, '', window.location.pathname);
       try {
         await callFn('teen-auth', { action: 'request_link', email: checkoutEmail });
@@ -1123,6 +1157,7 @@
       }
     }
     if (checkoutStatus === 'cancel') {
+      trackEvent('checkout_annule');
       history.replaceState({}, '', window.location.pathname);
     }
 
